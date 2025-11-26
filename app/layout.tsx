@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Karla, Rubik } from "next/font/google";
 import "./globals.css";
+import { NavbarDesktop } from "@/components/NavbarDesktop";
+import { NavbarTouch } from "@/components/NavbarTouch";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const karla = Karla({
+  variable: "--font-karla",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const rubik = Rubik({
+  variable: "--font-rubik",
   subsets: ["latin"],
 });
 
@@ -25,8 +27,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${karla.variable} ${rubik.variable} antialiased`}
       >
+        <NavbarDesktop />
+        <NavbarTouch />
         {children}
       </body>
     </html>
