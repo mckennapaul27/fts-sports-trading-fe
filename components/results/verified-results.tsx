@@ -24,7 +24,7 @@ export function VerifiedResults() {
   return (
     <section className="bg-white py-12 sm:py-16">
       <div className="container mx-auto px-6 sm:px-8 xl:px-12">
-        <div className="">
+        <div className="max-w-7xl mx-auto">
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
               <CheckmarkIcon />

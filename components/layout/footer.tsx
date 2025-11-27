@@ -134,134 +134,136 @@ export function Footer() {
       className="bg-dark-navy text-white"
       style={{ background: "var(--color-gradient)" }}
     >
-      <div className="container mx-auto max-w-7xl px-6 sm:px-8 xl:px-12">
-        <div className="py-12 sm:py-16">
-          {/* Main Footer Content */}
-          <div className="flex flex-col lg:flex-row lg:justify-between gap-16 lg:gap-12 mb-8">
-            {/* Left Column - Logo and Social */}
-            <div className="flex-shrink-0">
-              <Link href="/" className="inline-block mb-4">
-                <Image
-                  src="/logo-white-text.svg"
-                  alt="Fortis Sports Trading"
-                  width={180}
-                  height={38}
-                />
-              </Link>
-              <p className="text-gray-300 text-base mb-6">
-                Disciplined sports trading, proven in public.
+      <div className="container mx-auto px-6 sm:px-8 xl:px-12">
+        <div className="max-w-7xl mx-auto">
+          <div className="py-12 sm:py-16">
+            {/* Main Footer Content */}
+            <div className="flex flex-col lg:flex-row lg:justify-between gap-16 lg:gap-12 mb-8">
+              {/* Left Column - Logo and Social */}
+              <div className="flex-shrink-0">
+                <Link href="/" className="inline-block mb-4">
+                  <Image
+                    src="/logo-white-text.svg"
+                    alt="Fortis Sports Trading"
+                    width={180}
+                    height={38}
+                  />
+                </Link>
+                <p className="text-gray-300 text-base mb-6">
+                  Disciplined sports trading, proven in public.
+                </p>
+                {/* Social Media Icons */}
+                <div className="flex items-center gap-4">
+                  <a
+                    href="https://facebook.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:text-gold transition-colors"
+                    aria-label="Facebook"
+                  >
+                    <FacebookIcon />
+                  </a>
+                  <a
+                    href="https://twitter.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:text-gold transition-colors"
+                    aria-label="Twitter"
+                  >
+                    <TwitterIcon />
+                  </a>
+                  <a
+                    href="https://instagram.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white hover:text-gold transition-colors"
+                    aria-label="Instagram"
+                  >
+                    <InstagramIcon />
+                  </a>
+                  <a
+                    href="mailto:contact@fortissportstrading.com"
+                    className="text-white hover:text-gold transition-colors"
+                    aria-label="Email"
+                  >
+                    <EmailIcon />
+                  </a>
+                </div>
+              </div>
+
+              {/* Right Columns - Links */}
+              <div className="flex flex-col sm:flex-row justify-between gap-8 lg:gap-12 flex-grow max-w-2xl">
+                {/* Quick Links */}
+                <div>
+                  <h3 className="font-bold text-white mb-4">Quick Links</h3>
+                  <ul className="space-y-3">
+                    {quickLinks.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="text-gray-300 hover:text-white transition-colors text-base"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Resources */}
+                <div>
+                  <h3 className="font-bold text-white mb-4">Resources</h3>
+                  <ul className="space-y-3">
+                    {resources.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="text-gray-300 hover:text-white transition-colors text-base"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Legal */}
+                <div>
+                  <h3 className="font-bold text-white mb-4">Legal</h3>
+                  <ul className="space-y-3">
+                    {legal.map((link) => (
+                      <li key={link.href}>
+                        <Link
+                          href={link.href}
+                          className="text-gray-300 hover:text-white transition-colors text-base"
+                        >
+                          {link.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Copyright */}
+            <div className="border-t border-teal/30 pt-8 mt-8">
+              <p className="text-center text-gray-300 text-sm mb-4">
+                © {new Date().getFullYear()} Fortis Sports Trading. All rights
+                reserved.
               </p>
-              {/* Social Media Icons */}
-              <div className="flex items-center gap-4">
+              <p className="text-center text-gray-400 text-sm">
+                Website design & custom software by{" "}
                 <a
-                  href="https://facebook.com"
+                  href="https://www.bunkerdigital.co.uk/services/custom-software-for-small-business"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-white hover:text-gold transition-colors"
-                  aria-label="Facebook"
                 >
-                  <FacebookIcon />
+                  BunkerDigital
                 </a>
-                <a
-                  href="https://twitter.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white hover:text-gold transition-colors"
-                  aria-label="Twitter"
-                >
-                  <TwitterIcon />
-                </a>
-                <a
-                  href="https://instagram.com"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white hover:text-gold transition-colors"
-                  aria-label="Instagram"
-                >
-                  <InstagramIcon />
-                </a>
-                <a
-                  href="mailto:contact@fortissportstrading.com"
-                  className="text-white hover:text-gold transition-colors"
-                  aria-label="Email"
-                >
-                  <EmailIcon />
-                </a>
-              </div>
+              </p>
             </div>
-
-            {/* Right Columns - Links */}
-            <div className="flex flex-col sm:flex-row justify-between gap-8 lg:gap-12 flex-grow max-w-2xl">
-              {/* Quick Links */}
-              <div>
-                <h3 className="font-bold text-white mb-4">Quick Links</h3>
-                <ul className="space-y-3">
-                  {quickLinks.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="text-gray-300 hover:text-white transition-colors text-base"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Resources */}
-              <div>
-                <h3 className="font-bold text-white mb-4">Resources</h3>
-                <ul className="space-y-3">
-                  {resources.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="text-gray-300 hover:text-white transition-colors text-base"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Legal */}
-              <div>
-                <h3 className="font-bold text-white mb-4">Legal</h3>
-                <ul className="space-y-3">
-                  {legal.map((link) => (
-                    <li key={link.href}>
-                      <Link
-                        href={link.href}
-                        className="text-gray-300 hover:text-white transition-colors text-base"
-                      >
-                        {link.label}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Copyright */}
-          <div className="border-t border-teal/30 pt-8 mt-8">
-            <p className="text-center text-gray-300 text-sm mb-4">
-              © {new Date().getFullYear()} Fortis Sports Trading. All rights
-              reserved.
-            </p>
-            <p className="text-center text-gray-400 text-sm">
-              Website design & custom software by{" "}
-              <a
-                href="https://www.bunkerdigital.co.uk/services/custom-software-for-small-business"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-white hover:text-gold transition-colors"
-              >
-                BunkerDigital
-              </a>
-            </p>
           </div>
         </div>
       </div>
