@@ -45,7 +45,10 @@ function ArrowRightIcon() {
 
 export function Hero() {
   return (
-    <section className="bg-dark-navy py-16 sm:py-20 lg:py-24 min-h-[calc(100vh-100px)] flex items-center">
+    <section
+      className="py-16 sm:py-20 lg:py-24 min-h-[calc(100vh-100px)] flex items-center"
+      style={{ background: "var(--color-gradient)" }}
+    >
       <div className="container mx-auto px-6 sm:px-8 xl:px-12">
         <div className="flex flex-col items-center text-center space-y-8 max-w-4xl mx-auto">
           {/* Main Headline */}

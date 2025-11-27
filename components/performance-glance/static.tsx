@@ -100,22 +100,22 @@ export function PerformanceGlanceStatic() {
       <div className="container mx-auto px-6 sm:px-8 xl:px-12">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-dark-navy mb-3">
+          <div className="mb-8 mx-auto">
+            <h2 className="text-3xl text-center lg:text-4xl font-bold text-dark-navy mb-3">
               Performance At A Glance
             </h2>
-            <p className="text-lg text-dark-navy mb-6">
+            <p className="text-lg text-center text-dark-navy mb-6">
               Real results from live trading. All data is verified and publicly
               available.
             </p>
           </div>
 
           {/* System Selector */}
-          <div className="max-w-xs mb-4">
+          {/* <div className="max-w-xs mb-4">
             <select className="w-full px-4 py-2 border border-gray-300 rounded-sm bg-white text-dark-navy focus:outline-none focus:ring-2 focus:ring-gold focus:border-gold">
               <option>System 1</option>
             </select>
-          </div>
+          </div> */}
 
           <>
             {/* KPI Cards */}
@@ -172,7 +172,7 @@ export function PerformanceGlanceStatic() {
             {/* Chart Section */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 mb-8">
               <Tabs defaultValue="cumulative" className="w-full">
-                <TabsList className="mb-6  gap-3">
+                <TabsList className="mb-6">
                   <TabsTrigger value="cumulative">
                     Cumulative{" "}
                     <span className="hidden sm:inline">Profit/Loss</span>

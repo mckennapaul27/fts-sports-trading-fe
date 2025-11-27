@@ -101,7 +101,7 @@ export function HowItWorks() {
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center space-y-4 mb-12 sm:mb-16">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-dark-navy">
+            <h2 className="text-3xl lg:text-4xl  font-bold text-dark-navy">
               How It Works
             </h2>
             <p className="text-lg sm:text-xl text-dark-navy max-w-2xl mx-auto">

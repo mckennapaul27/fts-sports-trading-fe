@@ -12,7 +12,7 @@ const buttonVariants = cva(
         default: "bg-dark-navy text-white hover:bg-dark-navy/90",
         primary: "bg-dark-navy text-white hover:bg-dark-navy/90",
         secondary: "bg-gold text-dark-navy hover:bg-gold/90",
-        white: "bg-cream text-dark-navy hover:bg-cream/90",
+        white: "bg-cream text-dark-navy hover:bg-cream/70",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:
