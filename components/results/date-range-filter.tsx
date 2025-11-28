@@ -34,7 +34,7 @@ export function DateRangeFilter({
           <button
             key={range.value}
             onClick={() => onRangeChange(range.value)}
-            className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors ${
+            className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
               selectedRange === range.value
                 ? "bg-dark-navy text-white"
                 : "bg-gray-100 text-dark-navy hover:bg-gray-200"
@@ -47,10 +47,10 @@ export function DateRangeFilter({
 
       {dateRangeText && (
         <p className="text-sm text-gray-600">
-          Currently viewing: <span className="font-semibold">{dateRangeText}</span>
+          Currently viewing:{" "}
+          <span className="font-semibold">{dateRangeText}</span>
         </p>
       )}
     </div>
   );
 }
-

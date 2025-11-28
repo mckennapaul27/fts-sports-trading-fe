@@ -3,13 +3,14 @@
 import { useState } from "react";
 
 interface ProfitByOddsRange {
-  range: string;
+  range: string; // "Odds < 30.0" | "Odds < 20.0" | "Odds < 10.0" | "All Odds"
   minOdds: number;
   maxOdds: number | null;
   profit: number;
   bets: number;
   wins: number;
   strikeRate: number;
+  avgOdds: number;
 }
 
 interface OddsRangeAnalysisProps {
@@ -32,40 +33,41 @@ function formatCurrency(num: number): string {
 export function OddsRangeAnalysis({
   profitByOddsRange,
 }: OddsRangeAnalysisProps) {
-  const [selectedMaxOdds, setSelectedMaxOdds] = useState<number | null>(10.0);
+  // "Odds < 30.0" | "Odds < 20.0" | "Odds < 10.0" | "All Odds"
+  const [selectedRange, setSelectedRange] = useState<string | null>("All Odds");
 
   // Calculate aggregated data for selected odds range
-  const getFilteredData = (maxOdds: number | null) => {
-    if (maxOdds === null) {
-      // All odds
-      return profitByOddsRange.reduce(
-        (acc, range) => {
-          acc.totalBets += range.bets;
-          acc.totalWins += range.wins;
-          acc.totalProfit += range.profit;
-          return acc;
-        },
-        { totalBets: 0, totalWins: 0, totalProfit: 0 }
+  const getFilteredData = (range: string | null) => {
+    if (range === "All Odds") {
+      // All odds - find the "All Odds" entry in the data
+      const allOddsEntry = profitByOddsRange.find(
+        (r) => r.range === "All Odds"
       );
+      if (!allOddsEntry) {
+        return { totalBets: 0, totalWins: 0, totalProfit: 0, avgOdds: null };
+      }
+      return {
+        totalBets: allOddsEntry.bets,
+        totalWins: allOddsEntry.wins,
+        totalProfit: allOddsEntry.profit,
+        avgOdds: allOddsEntry.avgOdds,
+      };
     }
 
-    return profitByOddsRange
-      .filter((range) => {
-        if (range.maxOdds === null) return false;
-        return range.maxOdds < maxOdds;
-      })
-      .reduce(
-        (acc, range) => {
-          acc.totalBets += range.bets;
-          acc.totalWins += range.wins;
-          acc.totalProfit += range.profit;
-          return acc;
-        },
-        { totalBets: 0, totalWins: 0, totalProfit: 0 }
-      );
+    // For "Odds < X", find the matching range entry
+    const matchingEntry = profitByOddsRange.find((r) => r.range === range);
+    if (!matchingEntry) {
+      return { totalBets: 0, totalWins: 0, totalProfit: 0, avgOdds: null };
+    }
+    return {
+      totalBets: matchingEntry.bets,
+      totalWins: matchingEntry.wins,
+      totalProfit: matchingEntry.profit,
+      avgOdds: matchingEntry.avgOdds,
+    };
   };
 
-  const filteredData = getFilteredData(selectedMaxOdds);
+  const filteredData = getFilteredData(selectedRange);
   const winRate =
     filteredData.totalBets > 0
       ? (filteredData.totalWins / filteredData.totalBets) * 100
@@ -75,39 +77,14 @@ export function OddsRangeAnalysis({
       ? (filteredData.totalProfit / filteredData.totalBets) * 100
       : 0;
 
-  // Calculate average odds (simplified - using midpoint of ranges)
-  const getAverageOdds = () => {
-    if (selectedMaxOdds === null) return null;
-
-    const ranges = profitByOddsRange.filter((range) => {
-      if (range.maxOdds === null) return false;
-      return range.maxOdds < selectedMaxOdds;
-    });
-
-    if (ranges.length === 0) return null;
-
-    let totalWeightedOdds = 0;
-    let totalBets = 0;
-
-    ranges.forEach((range) => {
-      const midOdds = (range.minOdds + range.maxOdds!) / 2;
-      totalWeightedOdds += midOdds * range.bets;
-      totalBets += range.bets;
-    });
-
-    return totalBets > 0 ? totalWeightedOdds / totalBets : null;
-  };
-
-  const avgOdds = getAverageOdds();
-
   return (
     <div>
       {/* Filter Buttons */}
       <div className="flex flex-wrap gap-3 mb-12">
         <button
-          onClick={() => setSelectedMaxOdds(10.0)}
+          onClick={() => setSelectedRange("Odds < 10.0")}
           className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedMaxOdds === 10.0
+            selectedRange === "Odds < 10.0"
               ? "bg-gray-200 text-dark-navy font-bold"
               : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
           }`}
@@ -115,9 +92,9 @@ export function OddsRangeAnalysis({
           Odds &lt; 10.0
         </button>
         <button
-          onClick={() => setSelectedMaxOdds(20.0)}
+          onClick={() => setSelectedRange("Odds < 20.0")}
           className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedMaxOdds === 20.0
+            selectedRange === "Odds < 20.0"
               ? "bg-gray-200 text-dark-navy font-bold"
               : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
           }`}
@@ -125,14 +102,24 @@ export function OddsRangeAnalysis({
           Odds &lt; 20.0
         </button>
         <button
-          onClick={() => setSelectedMaxOdds(30.0)}
+          onClick={() => setSelectedRange("Odds < 30.0")}
           className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedMaxOdds === 30.0
+            selectedRange === "Odds < 30.0"
               ? "bg-gray-200 text-dark-navy font-bold"
               : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
           }`}
         >
           Odds &lt; 30.0
+        </button>
+        <button
+          onClick={() => setSelectedRange("All Odds")}
+          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
+            selectedRange === "All Odds"
+              ? "bg-gray-200 text-dark-navy font-bold"
+              : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
+          }`}
+        >
+          All Odds
         </button>
       </div>
 
@@ -180,15 +167,17 @@ export function OddsRangeAnalysis({
               {formatCurrency(filteredData.totalBets)}
             </span>
           </div>
-          {avgOdds !== null && (
-            <div className="text-center">
-              <span className="font-semibold">Average Odds:</span>{" "}
-              <span className="text-green">{avgOdds.toFixed(2)}</span>
-            </div>
-          )}
+          {filteredData.avgOdds !== null &&
+            filteredData.avgOdds !== undefined && (
+              <div className="text-center">
+                <span className="font-semibold">Average Odds:</span>{" "}
+                <span className="text-green">
+                  {filteredData.avgOdds.toFixed(2)}
+                </span>
+              </div>
+            )}
         </div>
       </div>
     </div>
   );
 }
-

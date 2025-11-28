@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Header } from "@/components/sections/header";
 import { SystemTabs } from "@/components/results/system-tabs";
 import { DateRangeFilter } from "@/components/results/date-range-filter";
@@ -11,6 +11,7 @@ import { OddsRangeAnalysis } from "@/components/results/odds-range-analysis";
 import { CsvDownloadCentre } from "@/components/results/csv-download-centre";
 import { VerifiedResults } from "@/components/results/verified-results";
 import { getDateRange } from "@/lib/date-utils";
+import { ClimbingBoxLoader } from "react-spinners";
 
 interface System {
   _id: string;
@@ -42,6 +43,7 @@ interface PerformanceStats {
     bets: number;
     wins: number;
     strikeRate: number;
+    avgOdds: number;
   }>;
 }
 
@@ -85,6 +87,7 @@ export default function ResultsPage() {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const systemResultsRef = useRef<HTMLDivElement>(null);
 
   const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
 
@@ -135,7 +138,7 @@ export default function ResultsPage() {
         // Fetch stats (note: stats endpoint may not support date filtering)
         // If it doesn't, we'll still get all-time stats
         const statsResponse = await fetch(
-          `${apiUrl}/api/performance/stats/${selectedSystemId}`
+          `${apiUrl}/api/performance/stats/${selectedSystemId}?${params.toString()}`
         );
         const statsData = await statsResponse.json();
         if (statsData.success) {
@@ -228,12 +231,13 @@ export default function ResultsPage() {
           systems={systems}
           selectedSystemId={selectedSystemId}
           onSystemChange={setSelectedSystemId}
+          systemResultsRef={systemResultsRef}
         />
       )}
 
       <section className="bg-white py-12 sm:py-16">
         <div className="container mx-auto px-6 sm:px-8 xl:px-12">
-          <div className="max-w-7xl mx-auto">
+          <div className="max-w-7xl mx-auto" ref={systemResultsRef}>
             <h2 className="text-3xl sm:text-4xl font-bold text-dark-navy mb-6">
               System Results
             </h2>
@@ -257,8 +261,11 @@ export default function ResultsPage() {
             )}
 
             {loading ? (
-              <div className="text-center py-12 text-dark-navy">
-                Loading performance data...
+              <div className="text-center py-12 flex flex-col items-center justify-center">
+                <div>
+                  <ClimbingBoxLoader color="#37744e" />
+                </div>
+                <p className="text-lg text-dark-navy">Loading stats...</p>
               </div>
             ) : (
               <>
