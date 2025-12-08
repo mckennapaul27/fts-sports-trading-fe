@@ -9,11 +9,16 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.2.4",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@storyblok/react": "^5.4.18",
+    "@tailwindcss/typography": "^0.5.19",
     "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "embla-carousel-autoplay": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "hamburger-react": "^2.5.2",
     "highcharts": "^12.4.0",
     "highcharts-react": "^0.0.3",
@@ -21,10 +26,16 @@
     "lucide-react": "^0.555.0",
     "luxon": "^3.7.2",
     "next": "16.0.4",
+    "next-auth": "^4.24.13",
     "react": "19.2.0",
     "react-dom": "19.2.0",
+    "react-hook-form": "^7.66.0",
     "react-spinners": "^0.17.0",
-    "tailwind-merge": "^3.4.0"
+    "resend": "^6.4.0",
+    "slugify": "^1.6.6",
+    "storyblok-js-client": "^7.1.6",
+    "tailwind-merge": "^3.4.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

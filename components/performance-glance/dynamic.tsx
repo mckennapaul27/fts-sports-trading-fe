@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
+import ClimbingBoxLoader from "react-spinners/ClimbingBoxLoader";
+import { OddsRangeAnalysis } from "@/components/results/odds-range-analysis";
 
 interface System {
   _id: string;
@@ -37,6 +39,7 @@ interface PerformanceStats {
     bets: number;
     wins: number;
     strikeRate: number;
+    avgOdds: number;
   }>;
 }
 
@@ -51,176 +54,6 @@ function formatCurrency(num: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(num);
-}
-
-function OddsRangeAnalysis({
-  profitByOddsRange,
-}: {
-  profitByOddsRange: PerformanceStats["profitByOddsRange"];
-}) {
-  const [selectedMaxOdds, setSelectedMaxOdds] = useState<number | null>(10.0);
-
-  // Calculate aggregated data for selected odds range
-  const getFilteredData = (maxOdds: number | null) => {
-    if (maxOdds === null) {
-      // All odds
-      return profitByOddsRange.reduce(
-        (acc, range) => {
-          acc.totalBets += range.bets;
-          acc.totalWins += range.wins;
-          acc.totalProfit += range.profit;
-          return acc;
-        },
-        { totalBets: 0, totalWins: 0, totalProfit: 0 }
-      );
-    }
-
-    return profitByOddsRange
-      .filter((range) => {
-        // Exclude ranges with null maxOdds (like "10.0+") as they represent odds >= 10.0
-        if (range.maxOdds === null) return false;
-        // For "Odds < 10.0", we want ranges where maxOdds < 10.0
-        // This excludes "8.0-10.0" (maxOdds: 10) since it includes odds at 10.0
-        return range.maxOdds < maxOdds;
-      })
-      .reduce(
-        (acc, range) => {
-          acc.totalBets += range.bets;
-          acc.totalWins += range.wins;
-          acc.totalProfit += range.profit;
-          return acc;
-        },
-        { totalBets: 0, totalWins: 0, totalProfit: 0 }
-      );
-  };
-
-  const filteredData = getFilteredData(selectedMaxOdds);
-  const winRate =
-    filteredData.totalBets > 0
-      ? (filteredData.totalWins / filteredData.totalBets) * 100
-      : 0;
-  const roi =
-    filteredData.totalBets > 0
-      ? (filteredData.totalProfit / filteredData.totalBets) * 100
-      : 0;
-
-  // Calculate average odds (simplified - using midpoint of ranges)
-  const getAverageOdds = () => {
-    if (selectedMaxOdds === null) return null;
-
-    // Use the same filter logic as getFilteredData
-    const ranges = profitByOddsRange.filter((range) => {
-      if (range.maxOdds === null) return false;
-      return range.maxOdds < selectedMaxOdds;
-    });
-
-    if (ranges.length === 0) return null;
-
-    let totalWeightedOdds = 0;
-    let totalBets = 0;
-
-    ranges.forEach((range) => {
-      const midOdds = (range.minOdds + range.maxOdds!) / 2;
-      totalWeightedOdds += midOdds * range.bets;
-      totalBets += range.bets;
-    });
-
-    return totalBets > 0 ? totalWeightedOdds / totalBets : null;
-  };
-
-  const avgOdds = getAverageOdds();
-
-  return (
-    <div>
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap gap-3 mb-12">
-        <button
-          onClick={() => setSelectedMaxOdds(10.0)}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedMaxOdds === 10.0
-              ? "bg-gray-200 text-dark-navy font-bold"
-              : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
-          }`}
-        >
-          Odds &lt; 10.0
-        </button>
-        <button
-          onClick={() => setSelectedMaxOdds(20.0)}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedMaxOdds === 20.0
-              ? "bg-gray-200 text-dark-navy font-bold"
-              : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
-          }`}
-        >
-          Odds &lt; 20.0
-        </button>
-        <button
-          onClick={() => setSelectedMaxOdds(30.0)}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedMaxOdds === 30.0
-              ? "bg-gray-200 text-dark-navy font-bold"
-              : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
-          }`}
-        >
-          Odds &lt; 30.0
-        </button>
-      </div>
-
-      {/* Performance Summary */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold  text-green mb-2">
-              {winRate.toFixed(2)}%
-            </div>
-            <div className="text-sm text-dark-navy">Win Rate</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-green mb-2">
-              {roi >= 0 ? "+" : ""}
-              {roi.toFixed(2)}%
-            </div>
-            <div className="text-sm text-dark-navy">ROI</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold  text-green mb-2">
-              {formatNumber(filteredData.totalBets)}
-            </div>
-            <div className="text-sm text-dark-navy">Total Bets</div>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold  text-green mb-2">
-              {filteredData.totalProfit >= 0 ? "+" : ""}
-              {formatCurrency(filteredData.totalProfit)}
-            </div>
-            <div className="text-sm text-dark-navy">Profit/Loss</div>
-          </div>
-        </div>
-
-        <div className="flex-col sm:inline-flex flex-row items-center sm:justify-center sm:w-full gap-6 text-sm text-dark-navy">
-          <div className="text-center">
-            <span className="font-semibold">Total Wins:</span>{" "}
-            <span className="text-green">
-              {formatNumber(filteredData.totalWins)}
-            </span>
-          </div>
-          <div className="text-center">
-            <span className="font-semibold">Total Stake:</span>{" "}
-            <span className="text-green">
-              {" "}
-              {formatCurrency(filteredData.totalBets)}
-            </span>
-          </div>
-          {avgOdds !== null && (
-            <div className="text-center">
-              <span className="font-semibold">Average Odds:</span>{" "}
-              <span className="text-green">{avgOdds.toFixed(2)}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function PerformanceGlance() {
@@ -267,12 +100,12 @@ export function PerformanceGlance() {
       setLoading(true);
       setError(null);
       try {
+        // Fetch stats (all-time data for performance glance)
         const response = await fetch(
           `${apiUrl}/api/performance/stats/${selectedSystemId}`
         );
         const data = await response.json();
         if (data.success) {
-          console.log(data.data);
           setStats(data.data);
         } else {
           setError(data.error || "Failed to load performance data");
@@ -378,6 +211,10 @@ export function PerformanceGlance() {
     stats?.cumulativePL[stats.cumulativePL.length - 1]?.cumulativePL || 0;
   const currentBets = stats?.totalBets || 0;
 
+  // Calculate ROI client-side to ensure precision matches odds range analysis
+  const calculatedROI =
+    stats && stats.totalBets > 0 ? (stats.totalPL / stats.totalBets) * 100 : 0;
+
   return (
     <section className="bg-white py-16 sm:py-20 lg:py-24">
       <div className="container mx-auto px-6 sm:px-8 xl:px-12">
@@ -465,13 +302,13 @@ export function PerformanceGlance() {
                   className={`text-2xl sm:text-3xl font-bold mb-1 ${
                     !stats
                       ? "text-green"
-                      : stats?.roi && stats?.roi >= 0
+                      : calculatedROI >= 0
                       ? "text-green"
                       : "text-red-600"
                   }`}
                 >
-                  {stats?.roi && stats?.roi >= 0 ? "+" : ""}
-                  {stats?.roi?.toFixed(1) || 0}%
+                  {calculatedROI >= 0 ? "+" : ""}
+                  {calculatedROI.toFixed(2)}%
                 </div>
                 <div className="text-sm text-gray-600">
                   Return on investment
@@ -516,15 +353,35 @@ export function PerformanceGlance() {
                     </>
                   ) : (
                     <div className="text-center py-12 text-dark-navy">
-                      No chart data available
+                      {loading ? (
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <ClimbingBoxLoader color="#37744e" /> Loading chart
+                          data...
+                        </div>
+                      ) : (
+                        "No chart data available"
+                      )}
                     </div>
                   )}
                 </TabsContent>
 
                 <TabsContent value="odds" className="mt-0">
-                  <OddsRangeAnalysis
-                    profitByOddsRange={stats?.profitByOddsRange || []}
-                  />
+                  {stats && stats.profitByOddsRange.length > 0 ? (
+                    <OddsRangeAnalysis
+                      profitByOddsRange={stats.profitByOddsRange}
+                    />
+                  ) : (
+                    <div className="text-center py-12 text-dark-navy">
+                      {loading ? (
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <ClimbingBoxLoader color="#37744e" /> Loading odds
+                          range data...
+                        </div>
+                      ) : (
+                        "No odds range data available"
+                      )}
+                    </div>
+                  )}
                 </TabsContent>
               </Tabs>
             </div>

@@ -115,6 +115,7 @@ async function getAllSystems(): Promise<System[]> {
     });
     const data = await response.json();
     if (data.success && data.data) {
+      console.log(data.data);
       return data.data;
     }
     return [];
@@ -136,11 +137,13 @@ function getLiveSinceYear(systemName: string, index: number): string {
   return defaultYears[index] || "2022";
 }
 
-export async function Systems() {
+export async function Systems({ bgColor = "bg-cream" }: { bgColor: string }) {
   const systems = await getAllSystems();
 
+  console.log(systems);
+
   return (
-    <section className="bg-cream py-16 sm:py-20 lg:py-24">
+    <section className={`${bgColor} py-16 sm:py-20 lg:py-24`}>
       <div className="container mx-auto px-6 sm:px-8 xl:px-12">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -206,7 +209,7 @@ export async function Systems() {
                           <span className="text-sm text-gray-600">ROI</span>
                         </div>
                         <div className="text-base font-bold text-dark-navy">
-                          {system.roi.toFixed(1)}%
+                          {system.roi.toFixed(2)}%
                         </div>
                       </div>
 
@@ -217,7 +220,7 @@ export async function Systems() {
                           <span className="text-sm text-gray-600">SR</span>
                         </div>
                         <div className="text-base font-bold text-dark-navy">
-                          {system.strikeRate.toFixed(0)}%
+                          {system.strikeRate.toFixed(2)}%
                         </div>
                       </div>
                     </div>
@@ -233,7 +236,7 @@ export async function Systems() {
                         }`}
                       >
                         {system.totalPL >= 0 ? "+" : ""}
-                        {formatNumber(system.totalPL)}pts
+                        {formatNumber(Number(system.totalPL))}pts
                       </div>
                     </div>
 

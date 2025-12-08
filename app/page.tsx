@@ -5,6 +5,7 @@ import { Membership } from "@/components/sections/membership";
 import { Systems } from "@/components/sections/systems";
 import { CTATransparency } from "@/components/sections/cta-transparency";
 import { NewsletterSignup } from "@/components/sections/newsletter-signup";
+import { FileSpreadsheet } from "lucide-react";
 
 export default function Home() {
   return (
@@ -14,7 +15,15 @@ export default function Home() {
       <HowItWorks />
       <Membership />
       <Systems />
-      <CTATransparency />
+      <CTATransparency
+        title="Transparent, Unfiltered Results"
+        description="We publish complete results and monthly summaries."
+        cardTitle="Results Sheets CSV"
+        cardDescription="Download complete CSV's with all historical data"
+        buttonText="Go To Results"
+        buttonHref="/results"
+        icon={FileSpreadsheet}
+      />
       <NewsletterSignup />
     </>
   );

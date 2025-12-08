@@ -188,7 +188,9 @@ export function ResultsChart({
           tooltip: {
             formatter: function () {
               const month = monthlyData[this.point.index];
-              return `<b>${this.x}</b><br/>£${this.y?.toFixed(2)}<br/>Bets: ${month?.bets || 0}`;
+              return `<b>${this.x}</b><br/>£${this.y?.toFixed(2)}<br/>Bets: ${
+                month?.bets || 0
+              }`;
             },
             style: {
               fontFamily: "var(--font-karla)",
@@ -232,4 +234,3 @@ export function ResultsChart({
     </div>
   );
 }
-

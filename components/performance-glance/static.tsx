@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ClimbingBoxLoader from "react-spinners/ClimbingBoxLoader";
 
 interface System {
   _id: string;
@@ -185,8 +186,8 @@ export function PerformanceGlanceStatic() {
                   </TabsTrigger>
                 </TabsList>
                 <TabsContent value="cumulative" className="mt-0">
-                  <div className="text-center py-12 text-dark-navy">
-                    No chart data available
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <ClimbingBoxLoader color="#37744e" /> Loading chart data...
                   </div>
                 </TabsContent>
               </Tabs>
