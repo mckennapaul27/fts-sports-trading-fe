@@ -187,7 +187,7 @@ export function ResultsChart({
           },
           tooltip: {
             formatter: function () {
-              const month = monthlyData[this.point.index];
+              const month = monthlyData[this.index];
               return `<b>${this.x}</b><br/>£${this.y?.toFixed(2)}<br/>Bets: ${
                 month?.bets || 0
               }`;

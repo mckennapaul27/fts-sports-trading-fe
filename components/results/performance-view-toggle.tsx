@@ -15,11 +15,22 @@ export function PerformanceViewToggle({
   onViewModeChange,
   showOddsRange = true,
 }: PerformanceViewToggleProps) {
+  const handleValueChange = (value: string) => {
+    // Type guard to ensure value is a valid ViewMode
+    if (
+      value === "cumulative" ||
+      value === "monthly" ||
+      value === "odds-range"
+    ) {
+      onViewModeChange(value);
+    }
+  };
+
   return (
     <div className="mb-6">
       <Tabs
         value={viewMode}
-        onValueChange={onViewModeChange}
+        onValueChange={handleValueChange}
         className="w-full overflow-x-auto"
       >
         <TabsList className="mb-4">

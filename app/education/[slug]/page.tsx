@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
-import { getEducationArticleBySlug } from "@/lib/storyblok";
+import {
+  getEducationArticleBySlug,
+  getEducationArticles,
+} from "@/lib/storyblok";
 import { StoryblokAsset, MetaDataComponent } from "@/lib/storyblok-types";
 import { renderStoryblokRichText } from "@/lib/storyblok-richtext";
 import { notFound } from "next/navigation";
@@ -35,6 +38,22 @@ function getStoryblokImageUrl(asset: StoryblokAsset | undefined): string {
 
 interface EducationArticlePageProps {
   params: Promise<{ slug: string }>;
+}
+
+// Generate static params for all education articles
+export async function generateStaticParams() {
+  const articles = await getEducationArticles();
+
+  return articles.map((article) => {
+    // Extract slug, removing "education/" prefix if present
+    const slug = article.slug.startsWith("education/")
+      ? article.slug.replace("education/", "")
+      : article.slug;
+
+    return {
+      slug,
+    };
+  });
 }
 
 // Helper function to get metadata from education article

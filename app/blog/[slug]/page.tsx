@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
-import { getBlogPostBySlug } from "@/lib/storyblok";
+import { getBlogPostBySlug, getBlogPosts } from "@/lib/storyblok";
 import { StoryblokAsset, MetaDataComponent } from "@/lib/storyblok-types";
 import { renderStoryblokRichText } from "@/lib/storyblok-richtext";
 import { notFound } from "next/navigation";
@@ -35,6 +35,22 @@ function getStoryblokImageUrl(asset: StoryblokAsset | undefined): string {
 
 interface BlogPostPageProps {
   params: Promise<{ slug: string }>;
+}
+
+// Generate static params for all blog posts
+export async function generateStaticParams() {
+  const posts = await getBlogPosts();
+
+  return posts.map((post) => {
+    // Extract slug, removing "blog/" prefix if present
+    const slug = post.slug.startsWith("blog/")
+      ? post.slug.replace("blog/", "")
+      : post.slug;
+
+    return {
+      slug,
+    };
+  });
 }
 
 // Helper function to get metadata from blog post

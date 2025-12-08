@@ -90,7 +90,7 @@ const columns: ColumnDef<BetResult>[] = [
   {
     accessorKey: "bsp",
     header: "BSP",
-    cell: ({ row }) => row.getValue("bsp").toFixed(2),
+    cell: ({ row }) => (row.getValue("bsp") as number).toFixed(2),
   },
   {
     accessorKey: "stake",

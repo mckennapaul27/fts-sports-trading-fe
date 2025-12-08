@@ -137,7 +137,7 @@ function getLiveSinceYear(systemName: string, index: number): string {
   return defaultYears[index] || "2022";
 }
 
-export async function Systems({ bgColor = "bg-cream" }: { bgColor: string }) {
+export async function Systems({ bgColor = "bg-cream" }: { bgColor?: string }) {
   const systems = await getAllSystems();
 
   console.log(systems);
