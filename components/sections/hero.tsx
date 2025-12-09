@@ -71,7 +71,7 @@ export function Hero() {
               asChild
               className="w-full sm:w-auto"
             >
-              <Link href="/join">Join Now</Link>
+              <Link href="/register">Join Now</Link>
             </Button>
             <Button variant="white" size="xl" asChild>
               <Link

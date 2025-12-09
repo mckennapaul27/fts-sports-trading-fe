@@ -5,6 +5,7 @@ import { NavbarDesktop } from "@/components/layout/NavbarDesktop";
 import { NavbarTouch } from "@/components/layout/NavbarTouch";
 import { ComplianceStrip } from "@/components/sections/compliance-strip";
 import { Footer } from "@/components/layout/footer";
+import { ToasterProvider } from "@/components/ui/toaster";
 
 const karla = Karla({
   variable: "--font-karla",
@@ -35,6 +36,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${karla.variable} ${rubik.variable} antialiased`}>
+        <ToasterProvider />
         <NavbarDesktop />
         <NavbarTouch />
         {children}

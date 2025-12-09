@@ -156,7 +156,7 @@ export function Membership() {
                   className="w-full"
                   asChild
                 >
-                  <Link href="/join">{plan.buttonText}</Link>
+                  <Link href="/register">{plan.buttonText}</Link>
                 </Button>
               </div>
             ))}

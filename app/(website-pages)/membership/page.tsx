@@ -229,7 +229,7 @@ export default function MembershipPage() {
         title="Ready to start trading?"
         description="Join today and get access to proven systems, daily selections, and complete transparency."
         buttonText="Create Account"
-        buttonHref="/join"
+        buttonHref="/register"
         guarantees={["7-day money back guarantee", "Cancel anytime"]}
       />
 
