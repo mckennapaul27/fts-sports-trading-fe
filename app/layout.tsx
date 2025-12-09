@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import { Karla, Rubik } from "next/font/google";
 import "./globals.css";
-import { NavbarDesktop } from "@/components/layout/NavbarDesktop";
-import { NavbarTouch } from "@/components/layout/NavbarTouch";
-import { ComplianceStrip } from "@/components/sections/compliance-strip";
-import { Footer } from "@/components/layout/footer";
+import { ConditionalNavbarFooter } from "@/components/layout/conditional-navbar-footer";
 import { ToasterProvider } from "@/components/ui/toaster";
 
 const karla = Karla({
@@ -37,11 +34,7 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${karla.variable} ${rubik.variable} antialiased`}>
         <ToasterProvider />
-        <NavbarDesktop />
-        <NavbarTouch />
-        {children}
-        <ComplianceStrip />
-        <Footer />
+        <ConditionalNavbarFooter>{children}</ConditionalNavbarFooter>
       </body>
     </html>
   );

@@ -4,6 +4,8 @@ import { Membership } from "@/components/sections/membership";
 import { ReadyToStart } from "@/components/sections/ready-to-start";
 import { FAQ } from "@/components/sections/faq";
 import { Check, X } from "lucide-react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/utils/auth-helpers";
 
 export const metadata: Metadata = {
   title: "Membership | Fortis Sports Trading",
@@ -116,7 +118,9 @@ const membershipFAQItems = [
   },
 ];
 
-export default function MembershipPage() {
+export default async function MembershipPage() {
+  const session = await getServerSession(authOptions);
+
   return (
     <>
       {/* Hero Section */}
@@ -126,7 +130,7 @@ export default function MembershipPage() {
       />
 
       {/* Pricing Plans Section */}
-      <Membership />
+      <Membership isAuthenticated={!!session} />
 
       {/* What's Included Section */}
       <section className="bg-gray-100 py-16 sm:py-20 lg:py-24">

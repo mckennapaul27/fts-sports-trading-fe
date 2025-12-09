@@ -6,14 +6,18 @@ import { Systems } from "@/components/sections/systems";
 import { CTATransparency } from "@/components/sections/cta-transparency";
 import { NewsletterSignup } from "@/components/sections/newsletter-signup";
 import { FileSpreadsheet } from "lucide-react";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/utils/auth-helpers";
 
-export default function Home() {
+export default async function Home() {
+  const session = await getServerSession(authOptions);
+
   return (
     <>
       <Hero />
       <PerformanceGlanceWrapper />
       <HowItWorks />
-      <Membership />
+      <Membership isAuthenticated={!!session} />
       <Systems />
       <CTATransparency
         title="Transparent, Unfiltered Results"

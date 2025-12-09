@@ -11,7 +11,7 @@ export function NavbarTouch() {
 
   return (
     <nav className="xl:hidden bg-dark-navy border-b border-gold/20">
-      <div className="container flex items-center justify-between px-6 sm:px-8 xl:px-12 py-4">
+      <div className="container mx-auto flex items-center justify-between px-6 sm:px-8 xl:px-12 py-4">
         <Link href="/" className="flex-shrink-0" onClick={() => setOpen(false)}>
           <Image
             src="/logo-white-text.svg"

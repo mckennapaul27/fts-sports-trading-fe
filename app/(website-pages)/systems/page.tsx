@@ -1,7 +1,6 @@
 import { Header } from "@/components/sections/header";
 import { Systems } from "@/components/sections/systems";
 import { CTAAlt } from "@/components/sections/cta-alt";
-import { ComplianceStrip } from "@/components/sections/compliance-strip";
 
 export default function SystemsPage() {
   return (
