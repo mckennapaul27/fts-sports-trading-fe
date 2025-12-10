@@ -6,9 +6,10 @@ interface DashboardWrapperProps {
 
 export default function DashboardWrapper({ children }: DashboardWrapperProps) {
   return (
-    <div className="min-h-screen bg-cream">
+    <div className="min-h-screen bg-gray-100">
       <DashboardSidebar />
-      <main className="lg:ml-72 p-6 lg:p-8">{children}</main>
+      {/* Topbar adds 64px (h-16) height, so we add pt-16 to main when topbar is visible */}
+      <main className="p-6 pt-16 lg:pt-34 pb-16 lg:pb-24">{children}</main>
     </div>
   );
 }

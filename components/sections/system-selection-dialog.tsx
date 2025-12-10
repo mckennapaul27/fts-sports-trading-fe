@@ -86,7 +86,7 @@ export function SystemSelectionDialog({
             <button
               key={system.id}
               onClick={() => setSelectedSystem(system)}
-              className={`w-full text-left p-4 rounded-lg border-2 transition-all ${
+              className={`w-full text-left p-4 rounded-lg border-2 transition-all cursor-pointer ${
                 selectedSystem?.id === system.id
                   ? "border-gold bg-gold/10"
                   : "border-gray-200 hover:border-gray-300"

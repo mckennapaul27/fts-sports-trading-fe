@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlanDisplay } from "@/components/sections/plan-display";
+import { Span } from "next/dist/trace";
 
 const registerFormSchema = z
   .object({
@@ -288,9 +289,16 @@ export default function RegisterAndSubscribePage() {
                       className="w-full"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting
-                        ? "Creating Account..."
-                        : "Create Account & Continue to Payment"}
+                      {isSubmitting ? (
+                        <span>Creating Account...</span>
+                      ) : (
+                        <>
+                          <span className="hidden sm:inline">
+                            Create Account & Continue to Payment
+                          </span>
+                          <span className="inline sm:hidden">Continue</span>
+                        </>
+                      )}
                     </Button>
                   </form>
                 </div>

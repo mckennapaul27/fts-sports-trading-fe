@@ -24,7 +24,7 @@ export default async function DashboardPage() {
   return (
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Welcome Banner */}
-      <div className="bg-cream rounded-lg flex items-center justify-between">
+      <div className="bg-cream rounded-lg flex items-center justify-between p-8">
         <div className="flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-gold flex items-center justify-center">
             <User className="w-8 h-8 text-dark-navy" />
