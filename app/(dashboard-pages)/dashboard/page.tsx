@@ -91,7 +91,7 @@ export default async function DashboardPage() {
       {/* Recent Activity */}
       <div>
         <h2 className="text-xl font-bold text-dark-navy font-heading mb-4">
-          Recent Activity
+          Yesterday's Results
         </h2>
         <div className="space-y-3">
           {/* Activity Item 1 - Won */}

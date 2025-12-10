@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { CheckCircle2, ArrowRight } from "lucide-react";
 import { Header } from "@/components/sections/header";
 import { Button } from "@/components/ui/button";
 
-export default function PaymentSuccessPage() {
+function PaymentSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const sessionId = searchParams.get("session_id");
+  // const sessionId = searchParams.get("session_id");
   const [countdown, setCountdown] = useState(10);
 
-  // Auto-redirect after 5 seconds
+  // Auto-redirect after 10 seconds
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => {
@@ -49,11 +49,11 @@ export default function PaymentSuccessPage() {
               </p>
 
               {/* Session ID (for debugging, can be removed in production) */}
-              {sessionId && (
+              {/* {sessionId && (
                 <p className="text-sm text-gray-500 mb-8">
                   Session ID: {sessionId}
                 </p>
-              )}
+              )} */}
 
               {/* Redirect Info */}
               <div className="bg-cream rounded-lg p-4 mb-8">
@@ -78,5 +78,31 @@ export default function PaymentSuccessPage() {
         </div>
       </section>
     </>
+  );
+}
+
+export default function PaymentSuccessPage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <Header
+            title="Payment Successful"
+            description="Your subscription has been activated. Welcome to Fortis Sports Trading!"
+          />
+          <section className="bg-cream py-12 sm:py-16 lg:py-20">
+            <div className="container mx-auto px-6 sm:px-8 xl:px-12">
+              <div className="max-w-2xl mx-auto">
+                <div className="bg-white rounded-lg p-8 sm:p-10 shadow-sm text-center">
+                  <p className="text-dark-navy">Loading...</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </>
+      }
+    >
+      <PaymentSuccessContent />
+    </Suspense>
   );
 }

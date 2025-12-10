@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PlanDisplay } from "@/components/sections/plan-display";
-import { Span } from "next/dist/trace";
 
 const registerFormSchema = z
   .object({
@@ -42,7 +41,7 @@ const productIdToSystemName: Record<string, string> = {
   prod_TZZcuPVww3QyDm: "System 3",
 };
 
-export default function RegisterAndSubscribePage() {
+function RegisterAndSubscribeContent() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -308,5 +307,31 @@ export default function RegisterAndSubscribePage() {
         </div>
       </section>
     </>
+  );
+}
+
+export default function RegisterAndSubscribePage() {
+  return (
+    <Suspense
+      fallback={
+        <>
+          <Header
+            title="Create Your Account"
+            description="Complete your registration and start your subscription."
+          />
+          <section className="py-12 sm:py-16 lg:py-20 bg-cream">
+            <div className="container mx-auto px-6 sm:px-8 xl:px-12">
+              <div className="max-w-5xl mx-auto">
+                <div className="bg-white rounded-lg p-8 shadow-sm text-center">
+                  <p className="text-dark-navy">Loading...</p>
+                </div>
+              </div>
+            </div>
+          </section>
+        </>
+      }
+    >
+      <RegisterAndSubscribeContent />
+    </Suspense>
   );
 }
