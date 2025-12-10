@@ -162,14 +162,16 @@ export function DashboardSidebar() {
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo/Title */}
-            <Image
-              src="/logo-white-text.svg"
-              alt="Logo"
-              width={180}
-              height={37}
-              priority
-              className="hidden xl:block"
-            />
+            <Link href="/">
+              <Image
+                src="/logo-white-text.svg"
+                alt="Logo"
+                width={180}
+                height={37}
+                priority
+                className="hidden xl:block"
+              />
+            </Link>
 
             {/* Navigation Tabs */}
             <nav className="flex-1 flex items-center justify-center">
