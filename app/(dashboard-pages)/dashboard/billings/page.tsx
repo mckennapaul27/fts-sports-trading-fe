@@ -14,6 +14,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
 import { ClimbingBoxLoader } from "react-spinners";
@@ -83,6 +84,7 @@ const fetcher = async (url: string, token: string) => {
 
 export default function BillingsPage() {
   const { data: session } = useSession();
+  const router = useRouter();
   const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
   const billingUrl = session?.accessToken
     ? `${apiUrl}/api/users/billing`
@@ -392,6 +394,11 @@ export default function BillingsPage() {
 
   // Get button text for a plan based on current subscription
   const getPlanButtonText = (plan: (typeof planDefinitions)[0]) => {
+    // If user has no subscription, all buttons should say "Choose Plan"
+    if (!billingData?.hasSubscription || !billingData?.currentPlan) {
+      return "Choose Plan";
+    }
+
     if (isCurrentPlan(plan)) {
       return "Current Plan";
     }
@@ -442,6 +449,31 @@ export default function BillingsPage() {
   const handlePlanChange = (plan: (typeof planDefinitions)[0]) => {
     if (isCurrentPlan(plan)) return;
 
+    // If user has no subscription, route to subscribe page (like membership.tsx)
+    if (!billingData?.hasSubscription || !billingData?.currentPlan) {
+      // If it's a single system plan, show the system selection dialog
+      if (plan.requiresSystemSelection) {
+        setSelectedNewPlan({
+          productId: "", // Will be set after system selection
+          priceId: "", // Will be set after system selection
+          planName: "Single System",
+        });
+        setSystemSelectionDialogOpen(true);
+      } else if (plan.productId) {
+        // For "All Systems" plans, pass all three system slugs
+        const allSystemSlugs = "system-1,system-2,system-3";
+        router.push(
+          `/dashboard/subscribe?productId=${
+            plan.productId
+          }&planName=${encodeURIComponent(
+            plan.title
+          )}&systemSlugs=${allSystemSlugs}`
+        );
+      }
+      return;
+    }
+
+    // User has subscription - handle upgrade/downgrade
     // If downgrading to single system, show system selection first
     if (plan.requiresSystemSelection) {
       setSelectedNewPlan({
@@ -463,13 +495,23 @@ export default function BillingsPage() {
     }
   };
 
-  // Handle system selection for downgrade
+  // Handle system selection for downgrade or new subscription
   const handleSystemSelected = (system: {
     id: string;
     name: string;
     slug: string;
     productId: string;
   }) => {
+    // If user has no subscription, route to subscribe page
+    if (!billingData?.hasSubscription || !billingData?.currentPlan) {
+      router.push(
+        `/dashboard/subscribe?productId=${system.productId}&planName=Single System&systemSlugs=${system.slug}`
+      );
+      setSystemSelectionDialogOpen(false);
+      return;
+    }
+
+    // User has subscription - handle downgrade/switch
     // Find the corresponding price ID
     const systemIndex = planDefinitions[0].productIds!.indexOf(
       system.productId
@@ -793,9 +835,17 @@ export default function BillingsPage() {
 
                 {/* Button */}
                 <Button
-                  variant={plan.buttonVariant}
+                  variant={
+                    !billingData?.hasSubscription || !billingData?.currentPlan
+                      ? "secondary"
+                      : plan.buttonVariant
+                  }
                   size="lg"
-                  className="w-full"
+                  className={`w-full ${
+                    !billingData?.hasSubscription || !billingData?.currentPlan
+                      ? "bg-gold text-dark-navy hover:bg-gold/90"
+                      : ""
+                  }`}
                   disabled={isCurrent || isCanceling}
                   onClick={() => handlePlanChange(plan)}
                 >

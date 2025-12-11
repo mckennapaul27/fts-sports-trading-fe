@@ -25,6 +25,7 @@ interface PlanDisplayProps {
   period: string;
   features: string[];
   systemName?: string;
+  productId?: string;
 }
 
 const planFeatures: Record<string, string[]> = {
@@ -68,15 +69,41 @@ const planPrices: Record<string, { price: string; period: string }> = {
   },
 };
 
+// Product IDs mapping
+const PRODUCT_IDS = {
+  SINGLE_SYSTEM_1: "prod_TZZbjLqthXdjxx",
+  SINGLE_SYSTEM_2: "prod_TZZcUfjAmtJfkg",
+  SINGLE_SYSTEM_3: "prod_TZZcuPVww3QyDm",
+  ALL_SYSTEMS_MONTHLY: "prod_TZZcEMlv2cNNWl",
+  ALL_SYSTEMS_YEARLY: "prod_TZZdcgHBZ13uZ9",
+};
+
 export function PlanDisplay({
   planName,
   systemName,
+  productId,
 }: {
   planName: string;
   systemName?: string;
+  productId?: string;
 }) {
-  const features = planFeatures[planName] || planFeatures["Single System"];
-  const { price, period } = planPrices[planName] || planPrices["Single System"];
+  // Determine the correct plan key based on planName and productId
+  let planKey = planName;
+
+  // If planName is "ALL SYSTEMS", determine if it's monthly or yearly based on productId
+  if (planName === "ALL SYSTEMS" || planName === "All Systems") {
+    if (productId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY) {
+      planKey = "All Systems - Yearly";
+    } else if (productId === PRODUCT_IDS.ALL_SYSTEMS_MONTHLY) {
+      planKey = "All Systems - Monthly";
+    } else {
+      // Default to monthly if productId not provided
+      planKey = "All Systems - Monthly";
+    }
+  }
+
+  const features = planFeatures[planKey] || planFeatures["Single System"];
+  const { price, period } = planPrices[planKey] || planPrices["Single System"];
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
@@ -87,8 +114,10 @@ export function PlanDisplay({
         <p className="text-sm text-gray-600">
           {systemName
             ? "Perfect for testing one system"
-            : planName.includes("Yearly")
+            : planKey === "All Systems - Yearly"
             ? "Best value for committed traders"
+            : planKey === "All Systems - Monthly" || planKey === "ALL SYSTEMS"
+            ? "Full portfolio access"
             : "Full portfolio access"}
         </p>
       </div>

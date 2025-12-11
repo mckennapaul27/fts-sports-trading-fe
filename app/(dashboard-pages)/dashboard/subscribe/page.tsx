@@ -7,6 +7,7 @@ import { Header } from "@/components/sections/header";
 import { PlanDisplay } from "@/components/sections/plan-display";
 import { Button } from "@/components/ui/button";
 import { SystemSelectionDialog } from "@/components/sections/system-selection-dialog";
+import { useSession } from "next-auth/react";
 
 // Map product IDs to system names
 const productIdToSystemName: Record<string, string> = {
@@ -16,6 +17,7 @@ const productIdToSystemName: Record<string, string> = {
 };
 
 export default function SubscribePage() {
+  const { data: session } = useSession();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [systemDialogOpen, setSystemDialogOpen] = useState(false);
   const router = useRouter();
@@ -38,7 +40,7 @@ export default function SubscribePage() {
   }, [productId, systemSlugs.length, router]);
 
   const handleSubscribe = async () => {
-    if (!productId || systemSlugs.length === 0) {
+    if (!productId || systemSlugs.length === 0 || !session?.accessToken) {
       toast.error("No plan selected. Please go back and select a plan.");
       return;
     }
@@ -47,10 +49,13 @@ export default function SubscribePage() {
 
     try {
       const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
-      const res = await fetch(`${apiUrl}/api/stripe/create-checkout-session`, {
+      const res = await fetch(`${apiUrl}/api/users/existing-user-subscribe`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // Include cookies for auth
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        credentials: "include",
         body: JSON.stringify({
           productId,
           systemSlugs,
@@ -101,10 +106,10 @@ export default function SubscribePage() {
 
   return (
     <>
-      <Header
+      {/* <Header
         title="Complete Your Subscription"
         description="Review your selected plan and proceed to payment."
-      />
+      /> */}
       <section className="bg-cream py-12 sm:py-16 lg:py-20">
         <div className="container mx-auto px-6 sm:px-8 xl:px-12">
           <div className="max-w-3xl mx-auto">
@@ -114,7 +119,11 @@ export default function SubscribePage() {
                 <h2 className="text-xl font-bold text-dark-navy mb-4">
                   Your Selected Plan
                 </h2>
-                <PlanDisplay planName={planName} systemName={systemName} />
+                <PlanDisplay
+                  planName={planName}
+                  systemName={systemName}
+                  productId={productId || undefined}
+                />
               </div>
 
               {/* Subscribe Button */}

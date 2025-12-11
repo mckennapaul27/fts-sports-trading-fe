@@ -20,8 +20,8 @@ export async function POST(request: NextRequest) {
 
     // Send notification email to support
     const supportEmailResult = await resend.emails.send({
-      from: "Fortis Sports Trading <noreply@fortissportstrading.com>",
-      to: "support@fortissportstrading.com",
+      from: "Fortis Sports Trading <noreply@mail.fortissportstrading.com>",
+      to: "support@mail.fortissportstrading.com",
       replyTo: email,
       subject: `Contact Form: ${subject}`,
       html: `
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     // Send acknowledgement email to enquirer
     const acknowledgementEmailResult = await resend.emails.send({
-      from: "Fortis Sports Trading <noreply@fortissportstrading.com>",
+      from: "Fortis Sports Trading <noreply@mail.fortissportstrading.com>",
       to: email,
       subject: "We've received your message",
       html: `
