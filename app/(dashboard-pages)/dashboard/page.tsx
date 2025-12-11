@@ -342,7 +342,7 @@ export default function DashboardPage() {
         </h2>
         {loadingResults ? (
           <div className="bg-white rounded-lg p-6 shadow-sm flex items-center justify-center">
-            <ClimbingBoxLoader color="#1e3a8a" size={20} />
+            <ClimbingBoxLoader color="#37744e" size={20} />
           </div>
         ) : recentResults.length === 0 ? (
           <div className="bg-white rounded-lg p-6 shadow-sm text-center text-dark-navy/70">
@@ -400,7 +400,7 @@ export default function DashboardPage() {
         </h2>
         {billingLoading ? (
           <div className="bg-white rounded-lg p-6 shadow-sm flex items-center justify-center">
-            <ClimbingBoxLoader color="#1e3a8a" size={20} />
+            <ClimbingBoxLoader color="#37744e" size={20} />
           </div>
         ) : !currentPlan ? (
           <div className="bg-white rounded-lg p-6 shadow-sm text-center">
