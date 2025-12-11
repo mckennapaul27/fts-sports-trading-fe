@@ -264,6 +264,19 @@ export default function BillingsPage() {
     });
   };
 
+  // Format date and time helper
+  const formatDateTime = (dateString: string | null) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    return date.toLocaleString("en-GB", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   // Format currency helper
   const formatCurrency = (amount: string, currency: string = "GBP") => {
     const symbol = currency === "GBP" ? "£" : currency;
@@ -621,10 +634,10 @@ export default function BillingsPage() {
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl lg:text-4xl font-bold text-dark-navy font-heading mb-2">
+        <h1 className="text-3xl font-bold text-dark-navy">
           Billing & Subscriptions
         </h1>
-        <p className="text-dark-navy/70 text-lg">
+        <p className="text-dark-navy/70  mt-1">
           Manage your subscription, payment method, and billing history.
         </p>
       </div>
@@ -938,7 +951,7 @@ export default function BillingsPage() {
                   .map((item: BillingData["billingHistory"][0]) => (
                     <tr key={item.id} className="hover:bg-gray-50">
                       <td className="border border-gray-300 px-4 py-3 text-dark-navy">
-                        {formatDate(item.date)}
+                        {formatDateTime(item.date)}
                       </td>
                       <td className="border border-gray-300 px-4 py-3 text-dark-navy">
                         {item.description}

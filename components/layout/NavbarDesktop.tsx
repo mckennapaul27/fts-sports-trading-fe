@@ -64,7 +64,7 @@ export function NavbarDesktop() {
               Sign in
             </Link>
             <Button variant="secondary" asChild>
-              <Link href="/register">Join now</Link>
+              <Link href="/membership">Join now</Link>
             </Button>
           </div>
         </div>

@@ -82,7 +82,7 @@ export function NavbarTouch() {
               Sign in
             </Link>
             <Button variant="secondary" asChild className="w-full">
-              <Link href="/register" onClick={() => setOpen(false)}>
+              <Link href="/membership" onClick={() => setOpen(false)}>
                 Join now
               </Link>
             </Button>

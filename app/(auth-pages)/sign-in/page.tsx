@@ -28,6 +28,17 @@ function SignInForm() {
   const { data: session, status } = useSession();
   const [countdown, setCountdown] = useState(5);
 
+  // Redirect based on role when authenticated
+  useEffect(() => {
+    if (status === "authenticated" && session?.user) {
+      if (session.user.role === "admin") {
+        router.push("/admin");
+      } else {
+        router.push("/dashboard");
+      }
+    }
+  }, [status, session, router]);
+
   // Redirect if user is already logged in
   //   useEffect(() => {
   //     if (status === "authenticated" && session) {
@@ -44,12 +55,16 @@ function SignInForm() {
       return () => clearTimeout(timer);
     } else {
       if (status === "authenticated" && session) {
-        router.push("/dashboard");
+        if (session.user?.role === "admin") {
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         router.push("/sign-in");
       }
     }
-  }, [countdown, router]);
+  }, [countdown, router, status, session]);
 
   const {
     register,
@@ -80,8 +95,9 @@ function SignInForm() {
       }
 
       if (signInResult?.ok) {
-        toast.success("Welcome back! Redirecting to dashboard...");
-        router.push("/dashboard");
+        toast.success("Welcome back! Redirecting...");
+        // Session will update automatically, useEffect will handle redirect
+        router.refresh();
       }
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Failed to sign in");
@@ -153,9 +169,16 @@ function SignInForm() {
                   variant="secondary"
                   size="lg"
                   className="w-full sm:w-auto"
-                  onClick={() => router.push("/dashboard")}
+                  onClick={() => {
+                    if (session?.user?.role === "admin") {
+                      router.push("/admin");
+                    } else {
+                      router.push("/dashboard");
+                    }
+                  }}
                 >
-                  Go to Dashboard
+                  Go to{" "}
+                  {session?.user?.role === "admin" ? "Admin" : "Dashboard"}
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>

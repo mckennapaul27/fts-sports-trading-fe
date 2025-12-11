@@ -5,46 +5,19 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Slant as Hamburger } from "hamburger-react";
-import {
-  LayoutDashboard,
-  List,
-  Key,
-  CreditCard,
-  Settings,
-  LogOut,
-} from "lucide-react";
+import { LayoutDashboard, List, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 const menuItems = [
   {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Selections",
-    href: "/dashboard/selections",
+    label: "Manage Selections",
+    href: "/admin",
     icon: List,
-  },
-  {
-    label: "Results",
-    href: "/dashboard/results",
-    icon: Key,
-  },
-  {
-    label: "Billings & Subscriptions",
-    href: "/dashboard/billings",
-    icon: CreditCard,
-  },
-  {
-    label: "Settings",
-    href: "/dashboard/settings",
-    icon: Settings,
   },
 ];
 
-export function DashboardSidebar() {
+export function AdminSidebar() {
   const [isOpen, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -78,7 +51,7 @@ export function DashboardSidebar() {
           >
             <div className="p-6 border-b border-gold/20">
               <h2 className="text-white text-xl font-bold font-heading">
-                Dashboard
+                Admin Panel
               </h2>
             </div>
             <nav className="p-4 space-y-2 flex flex-col h-full">
@@ -119,44 +92,6 @@ export function DashboardSidebar() {
         </div>
       )}
 
-      {/* Desktop Sidebar */}
-      {/* <aside className="hidden lg:flex lg:flex-col lg:w-72 lg:fixed lg:inset-y-0 lg:left-0 lg:bg-dark-navy lg:border-r lg:border-gold/20 h-full">
-        <div className="p-6 border-b border-gold/20">
-          <h2 className="text-white text-xl font-bold font-heading">
-            Dashboard
-          </h2>
-        </div>
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto flex flex-col">
-          <div className="flex-1 space-y-2">
-            {menuItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-4 py-3 rounded-sm transition-colors",
-                    isActive
-                      ? "bg-gold text-dark-navy font-semibold"
-                      : "text-white hover:bg-gold/20 hover:text-gold"
-                  )}
-                >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 rounded-sm transition-colors text-white hover:bg-gold/20 hover:text-gold cursor-pointer"
-          >
-            <LogOut className="w-5 h-5" />
-            <span>Logout</span>
-          </button>
-        </nav>
-      </aside> */}
       {/* Desktop Topbar*/}
       <div className="hidden lg:block fixed top-0 left-0 right-0 bg-dark-navy border-b border-gold/20 z-40">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">

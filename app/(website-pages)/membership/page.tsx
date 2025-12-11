@@ -233,7 +233,7 @@ export default async function MembershipPage() {
         title="Ready to start trading?"
         description="Join today and get access to proven systems, daily selections, and complete transparency."
         buttonText="Create Account"
-        buttonHref="/register"
+        buttonHref="#plans"
         guarantees={["7-day money back guarantee", "Cancel anytime"]}
       />
 

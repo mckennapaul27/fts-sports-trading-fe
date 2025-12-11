@@ -290,9 +290,7 @@ export default function SettingsPage() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold text-dark-navy font-heading mb-2">
-          Settings
-        </h1>
+        <h1 className="text-3xl font-bold text-dark-navy mb-1">Settings</h1>
         <p className="text-dark-navy/70">
           Manage your account preferences and notification settings.
         </p>
