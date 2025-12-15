@@ -293,15 +293,15 @@ export default function SelectionsPage() {
       accessorKey: "horse",
       header: "Selection",
     },
-    {
-      accessorKey: "isNew",
-      header: "Status",
-      cell: ({ row }) => (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-          {row.original.isNew ? "New" : "Upcoming"}
-        </span>
-      ),
-    },
+    // {
+    //   accessorKey: "isNew",
+    //   header: "Status",
+    //   cell: ({ row }) => (
+    //     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+    //       {row.original.isNew ? "New" : "Upcoming"}
+    //     </span>
+    //   ),
+    // },
   ];
 
   // Results table columns

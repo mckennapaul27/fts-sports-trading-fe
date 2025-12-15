@@ -73,11 +73,12 @@ const columns: ColumnDef<BetResult>[] = [
     accessorKey: "result",
     header: "Result",
     cell: ({ row }) => {
+      // console.log("row", row);
       const result = row.getValue("result") as string;
       return (
         <span
           className={
-            result === "LOST"
+            result === "LOST" || result === "PLACED"
               ? "text-green font-semibold"
               : "text-red-600 font-semibold"
           }

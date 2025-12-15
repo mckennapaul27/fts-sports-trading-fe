@@ -111,7 +111,7 @@ async function getAllSystems(): Promise<System[]> {
 
   try {
     const response = await fetch(`${apiUrl}/api/performance/all-systems`, {
-      cache: "force-cache", // Enable static generation
+      cache: "no-store", // Disable caching
     });
     const data = await response.json();
     if (data.success && data.data) {
