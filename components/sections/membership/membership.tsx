@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { SystemSelectionDialog } from "./system-selection-dialog";
+import { SystemSelectionDialog } from "../system-selection-dialog";
 
 function CheckmarkIcon() {
   return (
@@ -98,12 +99,12 @@ const plans: PricingPlan[] = [
   },
 ];
 
-interface MembershipProps {
-  isAuthenticated?: boolean;
-}
+interface MembershipProps {}
 
-export function Membership({ isAuthenticated = false }: MembershipProps) {
+export function Membership({}: MembershipProps) {
   const router = useRouter();
+  const { data: session } = useSession();
+  const isAuthenticated = !!session;
   const [systemDialogOpen, setSystemDialogOpen] = useState(false);
 
   const handleChoosePlan = (plan: PricingPlan) => {

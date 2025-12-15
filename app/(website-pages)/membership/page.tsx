@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/sections/header";
-import { Membership } from "@/components/sections/membership";
 import { ReadyToStart } from "@/components/sections/ready-to-start";
 import { FAQ } from "@/components/sections/faq";
 import { Check, X } from "lucide-react";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/utils/auth-helpers";
+import { MembershipWrapper } from "@/components/sections/membership/wrapper";
 
 export const metadata: Metadata = {
   title: "Membership | Fortis Sports Trading",
@@ -130,7 +130,7 @@ export default async function MembershipPage() {
       />
 
       {/* Pricing Plans Section */}
-      <Membership isAuthenticated={!!session} />
+      <MembershipWrapper />
 
       {/* What's Included Section */}
       <section className="bg-gray-100 py-16 sm:py-20 lg:py-24">

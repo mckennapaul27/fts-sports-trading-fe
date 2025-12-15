@@ -111,7 +111,7 @@ async function getAllSystems(): Promise<System[]> {
 
   try {
     const response = await fetch(`${apiUrl}/api/performance/all-systems`, {
-      cache: "no-store", // Disable caching
+      next: { revalidate: 300 }, // Revalidate every 5 minutes (ISR)
     });
     const data = await response.json();
     if (data.success && data.data) {
