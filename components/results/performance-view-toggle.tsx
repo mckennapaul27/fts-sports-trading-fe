@@ -42,7 +42,7 @@ export function PerformanceViewToggle({
           </TabsTrigger>
           {showOddsRange && (
             <TabsTrigger value="odds-range" className="cursor-pointer">
-              Analyse Profit by Odds Range
+              By Odds Range Summary
             </TabsTrigger>
           )}
         </TabsList>

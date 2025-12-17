@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 interface ProfitByOddsRange {
   range: string; // "Odds < 30.0" | "Odds < 20.0" | "Odds < 10.0" | "All Odds"
   minOdds: number;
@@ -33,41 +31,17 @@ function formatCurrency(num: number): string {
 export function OddsRangeAnalysis({
   profitByOddsRange,
 }: OddsRangeAnalysisProps) {
-  // "Odds < 30.0" | "Odds < 20.0" | "Odds < 10.0" | "All Odds"
-  const [selectedRange, setSelectedRange] = useState<string | null>("All Odds");
-
-  // Calculate aggregated data for selected odds range
-  const getFilteredData = (range: string | null) => {
-    if (range === "All Odds") {
-      // All odds - find the "All Odds" entry in the data
-      const allOddsEntry = profitByOddsRange.find(
-        (r) => r.range === "All Odds"
-      );
-      if (!allOddsEntry) {
-        return { totalBets: 0, totalWins: 0, totalProfit: 0, avgOdds: null };
-      }
-      return {
+  // This summary is always linked to the top-level filters.
+  // The API applies those filters first, then returns `profitByOddsRange` for the filtered dataset.
+  const allOddsEntry = profitByOddsRange.find((r) => r.range === "All Odds");
+  const filteredData = allOddsEntry
+    ? {
         totalBets: allOddsEntry.bets,
         totalWins: allOddsEntry.wins,
         totalProfit: allOddsEntry.profit,
         avgOdds: allOddsEntry.avgOdds,
-      };
-    }
-
-    // For "Odds < X", find the matching range entry
-    const matchingEntry = profitByOddsRange.find((r) => r.range === range);
-    if (!matchingEntry) {
-      return { totalBets: 0, totalWins: 0, totalProfit: 0, avgOdds: null };
-    }
-    return {
-      totalBets: matchingEntry.bets,
-      totalWins: matchingEntry.wins,
-      totalProfit: matchingEntry.profit,
-      avgOdds: matchingEntry.avgOdds,
-    };
-  };
-
-  const filteredData = getFilteredData(selectedRange);
+      }
+    : { totalBets: 0, totalWins: 0, totalProfit: 0, avgOdds: null };
   const winRate =
     filteredData.totalBets > 0
       ? (filteredData.totalWins / filteredData.totalBets) * 100
@@ -79,50 +53,6 @@ export function OddsRangeAnalysis({
 
   return (
     <div>
-      {/* Filter Buttons */}
-      <div className="flex flex-wrap gap-3 mb-12">
-        <button
-          onClick={() => setSelectedRange("Odds < 10.0")}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedRange === "Odds < 10.0"
-              ? "bg-gray-200 text-dark-navy font-bold"
-              : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
-          }`}
-        >
-          Odds &lt; 10.0
-        </button>
-        <button
-          onClick={() => setSelectedRange("Odds < 20.0")}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedRange === "Odds < 20.0"
-              ? "bg-gray-200 text-dark-navy font-bold"
-              : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
-          }`}
-        >
-          Odds &lt; 20.0
-        </button>
-        <button
-          onClick={() => setSelectedRange("Odds < 30.0")}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedRange === "Odds < 30.0"
-              ? "bg-gray-200 text-dark-navy font-bold"
-              : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
-          }`}
-        >
-          Odds &lt; 30.0
-        </button>
-        <button
-          onClick={() => setSelectedRange("All Odds")}
-          className={`px-4 py-2 rounded-sm text-sm font-medium transition-colors cursor-pointer ${
-            selectedRange === "All Odds"
-              ? "bg-gray-200 text-dark-navy font-bold"
-              : "bg-gray-100 text-dark-navy font-bold hover:bg-gray-300"
-          }`}
-        >
-          All Odds
-        </button>
-      </div>
-
       {/* Performance Summary */}
       <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
