@@ -34,17 +34,15 @@ export function PerformanceViewToggle({
         className="w-full overflow-x-auto"
       >
         <TabsList className="mb-4">
+          <TabsTrigger value="odds-range" className="cursor-pointer">
+            Summary
+          </TabsTrigger>
           <TabsTrigger value="cumulative" className="cursor-pointer">
             Cumulative Profit/Loss
           </TabsTrigger>
           <TabsTrigger value="monthly" className="cursor-pointer">
             Monthly Breakdown
           </TabsTrigger>
-          {showOddsRange && (
-            <TabsTrigger value="odds-range" className="cursor-pointer">
-              By Odds Range Summary
-            </TabsTrigger>
-          )}
         </TabsList>
       </Tabs>
     </div>

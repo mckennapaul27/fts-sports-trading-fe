@@ -12,7 +12,6 @@ import { CsvDownloadCentre } from "@/components/results/csv-download-centre";
 import { VerifiedResults } from "@/components/results/verified-results";
 import { getDateRange } from "@/lib/date-utils";
 import { ClimbingBoxLoader } from "react-spinners";
-import { COUNTRIES, MEETINGS } from "@/data";
 
 interface System {
   _id: string;
@@ -79,9 +78,11 @@ export default function ResultsPage() {
   const [dateRange, setDateRange] = useState<string>("all");
   const [customStartDate, setCustomStartDate] = useState<string>("");
   const [customEndDate, setCustomEndDate] = useState<string>("");
-  const [viewMode, setViewMode] = useState<ViewMode>("cumulative");
+  const [viewMode, setViewMode] = useState<ViewMode>("odds-range");
   const [country, setCountry] = useState<string>("all");
   const [meeting, setMeeting] = useState<string>("all");
+  const [availableCountries, setAvailableCountries] = useState<string[]>([]);
+  const [availableMeetings, setAvailableMeetings] = useState<string[]>([]);
   const [oddsPreset, setOddsPreset] = useState<
     "all" | "lt10" | "lt20" | "lt30" | "custom"
   >("all");
@@ -132,6 +133,29 @@ export default function ResultsPage() {
     return { minOdds: null, maxOdds: null };
   }, [customMaxOdds, customMinOdds, oddsPreset]);
 
+  const filterOptionsParams = useMemo(() => {
+    const params = new URLSearchParams();
+
+    if (dateRangeConfig.startDate)
+      params.append("startDate", dateRangeConfig.startDate);
+    if (dateRangeConfig.endDate)
+      params.append("endDate", dateRangeConfig.endDate);
+
+    if (oddsConfig.minOdds !== null)
+      params.append("minOdds", String(oddsConfig.minOdds));
+    if (oddsConfig.maxOdds !== null)
+      params.append("maxOdds", String(oddsConfig.maxOdds));
+
+    return params;
+  }, [
+    dateRangeConfig.endDate,
+    dateRangeConfig.startDate,
+    oddsConfig.maxOdds,
+    oddsConfig.minOdds,
+  ]);
+
+  const showCountryFilter = availableCountries.length > 0;
+
   const appliedFilters = useMemo(() => {
     const dateLabel = `Date: ${dateRangeConfig.label}`;
 
@@ -158,11 +182,23 @@ export default function ResultsPage() {
       }
     }
 
-    const countryLabel = `Country: ${country === "all" ? "All" : country}`;
     const meetingLabel = `Meeting: ${meeting === "all" ? "All" : meeting}`;
 
-    return [dateLabel, oddsLabel, countryLabel, meetingLabel];
-  }, [country, dateRangeConfig.label, meeting, oddsConfig, oddsPreset]);
+    const labels = [dateLabel, oddsLabel];
+    if (showCountryFilter) {
+      labels.push(`Country: ${country === "all" ? "All" : country}`);
+    }
+    labels.push(meetingLabel);
+
+    return labels;
+  }, [
+    country,
+    dateRangeConfig.label,
+    meeting,
+    oddsConfig,
+    oddsPreset,
+    showCountryFilter,
+  ]);
 
   const baseFilterParams = useMemo(() => {
     const params = new URLSearchParams();
@@ -177,7 +213,8 @@ export default function ResultsPage() {
     if (oddsConfig.maxOdds !== null)
       params.append("maxOdds", String(oddsConfig.maxOdds));
 
-    if (country !== "all") params.append("country", country);
+    if (showCountryFilter && country !== "all")
+      params.append("country", country);
     if (meeting !== "all") params.append("meeting", meeting);
 
     return params;
@@ -188,13 +225,50 @@ export default function ResultsPage() {
     meeting,
     oddsConfig.maxOdds,
     oddsConfig.minOdds,
+    showCountryFilter,
   ]);
+
+  // Fetch distinct filter options (countries/meetings) for this system
+  useEffect(() => {
+    if (!selectedSystemId) return;
+
+    const fetchFilterOptions = async () => {
+      try {
+        const resp = await fetch(
+          `${apiUrl}/api/performance/filters/${selectedSystemId}?${filterOptionsParams.toString()}`
+        );
+        const data = await resp.json();
+        if (!data?.success) return;
+
+        const countries = (data.data?.countries || []) as string[];
+        const meetings = (data.data?.meetings || []) as string[];
+
+        setAvailableCountries(countries);
+        setAvailableMeetings(meetings);
+
+        // If current selections aren't valid anymore, reset to "all"
+        if (countries.length === 0) {
+          if (country !== "all") setCountry("all");
+        } else if (country !== "all" && !countries.includes(country)) {
+          setCountry("all");
+        }
+
+        if (meeting !== "all" && !meetings.includes(meeting)) {
+          setMeeting("all");
+        }
+      } catch (err) {
+        console.error("Failed to load filter options:", err);
+      }
+    };
+
+    fetchFilterOptions();
+  }, [apiUrl, country, filterOptionsParams, meeting, selectedSystemId]);
 
   const hasActiveFilters = useMemo(() => {
     return (
       dateRange !== "all" ||
       oddsPreset !== "all" ||
-      country !== "all" ||
+      (showCountryFilter && country !== "all") ||
       meeting !== "all" ||
       customStartDate.trim() !== "" ||
       customEndDate.trim() !== "" ||
@@ -210,6 +284,7 @@ export default function ResultsPage() {
     dateRange,
     meeting,
     oddsPreset,
+    showCountryFilter,
   ]);
 
   const clearFilters = () => {
@@ -460,24 +535,30 @@ export default function ResultsPage() {
                 </div>
               )}
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <label className="flex flex-col gap-2">
-                  <span className="text-sm font-medium text-dark-navy">
-                    Country
-                  </span>
-                  <select
-                    value={country}
-                    onChange={(e) => setCountry(e.target.value)}
-                    className="border border-gray-200 rounded-sm px-3 py-2 text-sm text-dark-navy bg-white"
-                  >
-                    <option value="all">All</option>
-                    {COUNTRIES.map((c) => (
-                      <option key={c} value={c}>
-                        {c}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              <div
+                className={`flex gap-4 ${
+                  showCountryFilter ? "grid sm:grid-cols-2" : ""
+                }`}
+              >
+                {showCountryFilter && (
+                  <label className="flex flex-col gap-2">
+                    <span className="text-sm font-medium text-dark-navy">
+                      Country
+                    </span>
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      className="border border-gray-200 rounded-sm px-3 py-2 text-sm text-dark-navy bg-white"
+                    >
+                      <option value="all">All</option>
+                      {availableCountries.map((c) => (
+                        <option key={c} value={c}>
+                          {c}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                )}
 
                 <label className="flex flex-col gap-2">
                   <span className="text-sm font-medium text-dark-navy">
@@ -489,7 +570,7 @@ export default function ResultsPage() {
                     className="border border-gray-200 rounded-sm px-3 py-2 text-sm text-dark-navy bg-white"
                   >
                     <option value="all">All</option>
-                    {MEETINGS.map((m) => (
+                    {availableMeetings.map((m) => (
                       <option key={m} value={m}>
                         {m}
                       </option>
