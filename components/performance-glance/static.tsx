@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ClimbingBoxLoader from "react-spinners/ClimbingBoxLoader";
+// import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+// import ClimbingBoxLoader from "react-spinners/ClimbingBoxLoader";
 
 interface System {
   _id: string;
@@ -105,9 +105,17 @@ export function PerformanceGlanceStatic() {
             <h2 className="text-3xl text-center lg:text-4xl font-bold text-dark-navy mb-3">
               Performance At A Glance
             </h2>
-            <p className="text-lg text-center text-dark-navy mb-6">
-              Real results from live trading. All data is verified and publicly
-              available.
+            <p className="text-lg text-center text-dark-navy mb-6 max-w-2xl mx-auto">
+              Real results from live trading. For more detailed results for all
+              systems including custom date ranges, odds ranges, country/meeting
+              filters, and the full results table, see the{" "}
+              <Link
+                href="/results"
+                className="underline underline-offset-4 hover:text-gold"
+              >
+                Results page
+              </Link>
+              .
             </p>
           </div>
 
@@ -131,9 +139,7 @@ export function PerformanceGlanceStatic() {
                 >
                   {formatNumber(0)} pts
                 </div>
-                <div className="text-sm text-gray-600">
-                  Portfolio cumulative
-                </div>
+                <div className="text-sm text-gray-600">System 1 cumulative</div>
               </div>
 
               {/* Strike Rate */}
@@ -142,7 +148,7 @@ export function PerformanceGlanceStatic() {
                 <div className="text-2xl sm:text-3xl font-bold text-green mb-1">
                   0%
                 </div>
-                <div className="text-sm text-gray-600">System 1</div>
+                <div className="text-sm text-gray-600">System 1 win rate</div>
               </div>
 
               {/* Total Bets */}
@@ -151,7 +157,7 @@ export function PerformanceGlanceStatic() {
                 <div className="text-2xl sm:text-3xl font-bold text-green mb-1">
                   {formatNumber(0)}
                 </div>
-                <div className="text-sm text-gray-600">Since inception</div>
+                <div className="text-sm text-gray-600">System 1 total bets</div>
               </div>
 
               {/* ROI */}
@@ -164,15 +170,16 @@ export function PerformanceGlanceStatic() {
                 >
                   0%
                 </div>
-                <div className="text-sm text-gray-600">
-                  Return on investment
-                </div>
+                <div className="text-sm text-gray-600">System 1 ROI</div>
               </div>
             </div>
 
             {/* Chart Section */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 mb-8">
-              <Tabs defaultValue="cumulative" className="w-full">
+              <h3 className="text-lg font-bold text-dark-navy mb-6">
+                Cumulative Profit/Loss - System 1
+              </h3>
+              {/* <Tabs defaultValue="cumulative" className="w-full">
                 <TabsList className="mb-6">
                   <TabsTrigger value="cumulative">
                     Cumulative{" "}
@@ -190,7 +197,7 @@ export function PerformanceGlanceStatic() {
                     <ClimbingBoxLoader color="#37744e" /> Loading chart data...
                   </div>
                 </TabsContent>
-              </Tabs>
+              </Tabs> */}
             </div>
 
             {/* Explore All Results Button */}

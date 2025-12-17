@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import ClimbingBoxLoader from "react-spinners/ClimbingBoxLoader";
-import { OddsRangeAnalysis } from "@/components/results/odds-range-analysis";
 
 interface System {
   _id: string;
@@ -224,9 +222,17 @@ export function PerformanceGlance() {
             <h2 className="text-3xl text-center lg:text-4xl  font-bold text-dark-navy mb-3">
               Performance At A Glance
             </h2>
-            <p className="text-lg text-center text-dark-navy mb-6">
-              Real results from live trading. All data is verified and publicly
-              available.
+            <p className="text-lg text-center text-dark-navy mb-6 max-w-2xl mx-auto">
+              Real results from live trading. For more detailed results for all
+              systems including custom date ranges, odds ranges, country/meeting
+              filters, and the full results table, see the{" "}
+              <Link
+                href="/results"
+                className="underline underline-offset-4 hover:text-gold"
+              >
+                Results page
+              </Link>
+              .
             </p>
           </div>
 
@@ -270,9 +276,7 @@ export function PerformanceGlance() {
                   {stats?.totalPL && stats.totalPL >= 0 ? "+" : ""}
                   {formatNumber(stats?.totalPL || 0)} pts
                 </div>
-                <div className="text-sm text-gray-600">
-                  Portfolio cumulative
-                </div>
+                <div className="text-sm text-gray-600">System 1 cumulative</div>
               </div>
 
               {/* Strike Rate */}
@@ -281,9 +285,7 @@ export function PerformanceGlance() {
                 <div className="text-2xl sm:text-3xl font-bold text-green mb-1">
                   {stats?.strikeRate?.toFixed(1) || 0}%
                 </div>
-                <div className="text-sm text-gray-600">
-                  {systems.find((s) => s._id === selectedSystemId)?.name}
-                </div>
+                <div className="text-sm text-gray-600">System 1 win rate</div>
               </div>
 
               {/* Total Bets */}
@@ -292,7 +294,7 @@ export function PerformanceGlance() {
                 <div className="text-2xl sm:text-3xl font-bold text-green mb-1">
                   {formatNumber(stats?.totalBets || 0)}
                 </div>
-                <div className="text-sm text-gray-600">Since inception</div>
+                <div className="text-sm text-gray-600">System 1 total bets</div>
               </div>
 
               {/* ROI */}
@@ -310,80 +312,46 @@ export function PerformanceGlance() {
                   {calculatedROI >= 0 ? "+" : ""}
                   {calculatedROI.toFixed(2)}%
                 </div>
-                <div className="text-sm text-gray-600">
-                  Return on investment
-                </div>
+                <div className="text-sm text-gray-600">System 1 ROI</div>
               </div>
             </div>
 
             {/* Chart Section */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8 mb-8">
-              <Tabs defaultValue="cumulative" className="w-full">
-                <TabsList className="mb-6">
-                  <TabsTrigger value="cumulative" className="cursor-pointer">
-                    Cumulative{" "}
-                    <span className="hidden sm:inline">Profit/Loss</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="odds" className="cursor-pointer">
-                    <span className="inline sm:hidden">Odds Range</span>
-                    <span className="hidden sm:inline">
-                      Analyse Profit by Odds Range
-                    </span>
-                  </TabsTrigger>
-                </TabsList>
+              <h3 className="text-lg font-bold text-dark-navy mb-6">
+                Cumulative Profit/Loss - System 1
+              </h3>
 
-                <TabsContent value="cumulative" className="mt-0">
-                  {stats && stats.cumulativePL.length > 0 ? (
-                    <>
-                      <HighchartsReact
-                        key={selectedSystemId}
-                        highcharts={Highcharts}
-                        options={chartOptions}
-                      />
-                      <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
-                        <div className="text-sm text-dark-navy">
-                          <span className="font-semibold">Current P/L:</span>{" "}
-                          {formatCurrency(currentPL)}
-                        </div>
-                        <div className="text-sm text-dark-navy">
-                          <span className="font-semibold">Total Bets:</span>{" "}
-                          {formatNumber(currentBets)}
-                        </div>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="text-center py-12 text-dark-navy">
-                      {loading ? (
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <ClimbingBoxLoader color="#37744e" /> Loading chart
-                          data...
-                        </div>
-                      ) : (
-                        "No chart data available"
-                      )}
+              {stats && stats.cumulativePL.length > 0 ? (
+                <>
+                  <HighchartsReact
+                    key={selectedSystemId}
+                    highcharts={Highcharts}
+                    options={chartOptions}
+                  />
+                  <div className="flex justify-between items-center mt-6 pt-6 border-t border-gray-200">
+                    <div className="text-sm text-dark-navy">
+                      <span className="font-semibold">Current P/L:</span>{" "}
+                      {formatCurrency(currentPL)}
                     </div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="odds" className="mt-0">
-                  {stats && stats.profitByOddsRange.length > 0 ? (
-                    <OddsRangeAnalysis
-                      profitByOddsRange={stats.profitByOddsRange}
-                    />
-                  ) : (
-                    <div className="text-center py-12 text-dark-navy">
-                      {loading ? (
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <ClimbingBoxLoader color="#37744e" /> Loading odds
-                          range data...
-                        </div>
-                      ) : (
-                        "No odds range data available"
-                      )}
+                    <div className="text-sm text-dark-navy">
+                      <span className="font-semibold">Total Bets:</span>{" "}
+                      {formatNumber(currentBets)}
                     </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-12 text-dark-navy">
+                  {loading ? (
+                    <div className="flex flex-col items-center justify-center gap-2">
+                      <ClimbingBoxLoader color="#37744e" /> Loading chart
+                      data...
+                    </div>
+                  ) : (
+                    "No chart data available"
                   )}
-                </TabsContent>
-              </Tabs>
+                </div>
+              )}
             </div>
 
             {/* Explore All Results Button */}
