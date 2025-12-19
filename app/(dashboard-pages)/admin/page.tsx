@@ -18,7 +18,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast from "react-hot-toast";
-import { Plus, Edit, Trash2, Loader2 } from "lucide-react";
+import { Plus, Edit, Trash2, Loader2, Upload } from "lucide-react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -128,6 +128,9 @@ export default function AdminSelectionsPage() {
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Main tab state (Manage Selections vs Manage Results)
+  const [activeMainTab, setActiveMainTab] = useState<string>("selections");
+
   // Bulk entry state
   const [activeSystemTab, setActiveSystemTab] = useState<string>("");
   const [bulkEntryDates, setBulkEntryDates] = useState<Record<string, string>>(
@@ -137,6 +140,10 @@ export default function AdminSelectionsPage() {
     Record<string, BulkSelectionRow[]>
   >({});
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
+  const [isCsvUploading, setIsCsvUploading] = useState(false);
+
+  // Results upload state
+  const [isResultsUploading, setIsResultsUploading] = useState(false);
 
   const {
     register: registerCreate,
@@ -578,6 +585,133 @@ export default function AdminSelectionsPage() {
     }
   };
 
+  const handleCsvUpload = async (
+    systemId: string,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!session?.accessToken) return;
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith(".csv") && file.type !== "text/csv") {
+      toast.error("Please upload a CSV file");
+      return;
+    }
+
+    const date = bulkEntryDates[systemId];
+    if (!date) {
+      toast.error("Please select a date first");
+      event.target.value = ""; // Reset file input
+      return;
+    }
+
+    setIsCsvUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("csv", file);
+      formData.append("systemId", systemId);
+      formData.append("date", date);
+      console.log("formData", formData);
+
+      const response = await fetch(`${apiUrl}/api/selections/upload-csv`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${session.accessToken}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        const createdCount = result.created || 0;
+        toast.success(
+          `Successfully uploaded and created ${createdCount} selection(s) from CSV`
+        );
+        // Refresh selections table
+        fetchSelections(true); // Reset pagination
+      } else {
+        toast.error(result.error || "Failed to upload CSV");
+      }
+    } catch (err) {
+      console.error("Error uploading CSV:", err);
+      toast.error("Failed to upload CSV");
+    } finally {
+      setIsCsvUploading(false);
+      event.target.value = ""; // Reset file input
+    }
+  };
+
+  const handleResultsCsvUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    if (!session?.accessToken) return;
+
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith(".csv") && file.type !== "text/csv") {
+      toast.error("Please upload a CSV file");
+      return;
+    }
+
+    setIsResultsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("csv", file);
+
+      const response = await fetch(
+        `${apiUrl}/api/selections/upload-results-csv`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: formData,
+        }
+      );
+
+      const result = await response.json();
+      if (result.success) {
+        const updatedCount = result.updated || 0;
+        toast.success(
+          `Successfully uploaded and updated ${updatedCount} selection(s) with results`
+        );
+
+        // Show warnings if there are unmatched rows or errors
+        if (result.unmatched && result.unmatched.length > 0) {
+          toast.error(
+            `${result.unmatched.length} row(s) could not be matched to existing selections`,
+            { duration: 5000 }
+          );
+        }
+        if (result.errors && result.errors.length > 0) {
+          toast.error(
+            `${result.errors.length} row(s) had errors during processing`,
+            { duration: 5000 }
+          );
+        }
+
+        // Reset file input
+        event.target.value = "";
+        // Refresh selections table if we're on the selections tab
+        if (activeMainTab === "selections") {
+          fetchSelections(true); // Reset pagination
+        }
+      } else {
+        toast.error(result.error || "Failed to upload results CSV");
+      }
+    } catch (err) {
+      console.error("Error uploading results CSV:", err);
+      toast.error("Failed to upload results CSV");
+    } finally {
+      setIsResultsUploading(false);
+      event.target.value = ""; // Reset file input
+    }
+  };
+
   const columns: ColumnDef<Selection>[] = [
     {
       accessorKey: "dateISO",
@@ -763,788 +897,980 @@ export default function AdminSelectionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-dark-navy">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold text-dark-navy mb-2">
+          Admin Dashboard
+        </h1>
+        <p className="text-gray-600">Manage selections and upload results</p>
+      </div>
+
+      {/* Main Tabs */}
+      <Tabs
+        value={activeMainTab}
+        onValueChange={setActiveMainTab}
+        className="w-full mb-6"
+      >
+        <TabsList className="bg-cream/50 border border-gray-200 mb-6">
+          <TabsTrigger
+            value="selections"
+            className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
+          >
             Manage Selections
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Create, update, and delete daily selections
-          </p>
-        </div>
-        <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-          <DialogTrigger asChild>
-            <Button variant="outline">
-              <Plus className="w-4 h-4 mr-2" />
-              Single Entry
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Create New Selection</DialogTitle>
-              <DialogDescription>
-                Add a new selection to the system.
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmitCreate(onCreateSubmit)}>
-              <div className="space-y-4 py-4">
-                <div>
-                  <Label htmlFor="systemId">System *</Label>
-                  <select
-                    id="systemId"
-                    {...registerCreate("systemId")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-                  >
-                    <option value="">Select a system</option>
-                    {systems.map((system) => (
-                      <option key={system._id} value={system._id}>
-                        {system.name}
-                      </option>
-                    ))}
-                  </select>
-                  {errorsCreate.systemId && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errorsCreate.systemId.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="date">Date *</Label>
-                  <Input id="date" type="date" {...registerCreate("date")} />
-                  {errorsCreate.date && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errorsCreate.date.message}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <Label htmlFor="country">Country</Label>
-                  <select
-                    id="country"
-                    {...registerCreate("country")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-                  >
-                    <option value="">Select a country</option>
-                    {COUNTRIES.map((country) => (
-                      <option key={country} value={country}>
-                        {country}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="meeting">Meeting</Label>
-                  <select
-                    id="meeting"
-                    {...registerCreate("meeting")}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-                  >
-                    <option value="">Select a meeting</option>
-                    {MEETINGS.map((meeting) => (
-                      <option key={meeting} value={meeting}>
-                        {meeting}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <Label htmlFor="time">Time</Label>
-                  <Input
-                    id="time"
-                    {...registerCreate("time")}
-                    placeholder="12:45"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="horse">Horse *</Label>
-                  <Input
-                    id="horse"
-                    {...registerCreate("horse")}
-                    placeholder="Ronnies Reflection"
-                  />
-                  {errorsCreate.horse && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {errorsCreate.horse.message}
-                    </p>
-                  )}
-                </div>
+          </TabsTrigger>
+          <TabsTrigger
+            value="results"
+            className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
+          >
+            Manage Results
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Manage Selections Tab */}
+        <TabsContent value="selections" className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-semibold text-dark-navy">
+                Manage Selections
+              </h2>
+              <p className="text-gray-600 mt-1">
+                Create, update, and delete daily selections
+              </p>
+            </div>
+            <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Single Entry
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create New Selection</DialogTitle>
+                  <DialogDescription>
+                    Add a new selection to the system.
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmitCreate(onCreateSubmit)}>
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label htmlFor="systemId">System *</Label>
+                      <select
+                        id="systemId"
+                        {...registerCreate("systemId")}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                      >
+                        <option value="">Select a system</option>
+                        {systems.map((system) => (
+                          <option key={system._id} value={system._id}>
+                            {system.name}
+                          </option>
+                        ))}
+                      </select>
+                      {errorsCreate.systemId && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errorsCreate.systemId.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="date">Date *</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        {...registerCreate("date")}
+                      />
+                      {errorsCreate.date && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errorsCreate.date.message}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="country">Country</Label>
+                      <select
+                        id="country"
+                        {...registerCreate("country")}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                      >
+                        <option value="">Select a country</option>
+                        {COUNTRIES.map((country) => (
+                          <option key={country} value={country}>
+                            {country}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="meeting">Meeting</Label>
+                      <select
+                        id="meeting"
+                        {...registerCreate("meeting")}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                      >
+                        <option value="">Select a meeting</option>
+                        {MEETINGS.map((meeting) => (
+                          <option key={meeting} value={meeting}>
+                            {meeting}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="time">Time</Label>
+                      <Input
+                        id="time"
+                        {...registerCreate("time")}
+                        placeholder="12:45"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="horse">Horse *</Label>
+                      <Input
+                        id="horse"
+                        {...registerCreate("horse")}
+                        placeholder="Ronnies Reflection"
+                      />
+                      {errorsCreate.horse && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errorsCreate.horse.message}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setCreateDialogOpen(false);
+                        resetCreate();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={isSubmitting}>
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Creating...
+                        </>
+                      ) : (
+                        "Create"
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </div>
+
+          {/* Bulk Entry Section */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-dark-navy mb-2">
+                Bulk Entry - Daily Selections
+              </h2>
+              <p className="text-sm text-gray-600">
+                Select a system and date, then add multiple selections at once.
+                You can either manually add rows or upload a CSV file.
+              </p>
+              <p className="text-xs text-gray-500 mt-1"></p>
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mt-4 mb-6">
+                <p className="text-sm font-semibold text-blue-900">
+                  Upload exactly the same CSV as xCloudBot without editing it.
+                </p>
               </div>
+            </div>
+
+            {systems.length > 0 && (
+              <Tabs
+                value={activeSystemTab}
+                onValueChange={setActiveSystemTab}
+                className="w-full"
+              >
+                <TabsList className="bg-cream/50 border border-gray-200 mb-4">
+                  {systems.map((system) => (
+                    <TabsTrigger
+                      key={system._id}
+                      value={system._id}
+                      className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
+                    >
+                      {system.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                {systems.map((system) => (
+                  <TabsContent key={system._id} value={system._id}>
+                    <div className="space-y-4">
+                      {/* Date Picker */}
+                      <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
+                        <div className="flex-1">
+                          <Label htmlFor={`date-${system._id}`}>Date *</Label>
+                          <Input
+                            id={`date-${system._id}`}
+                            type="date"
+                            value={bulkEntryDates[system._id] || ""}
+                            onChange={(e) =>
+                              setBulkEntryDates((prev) => ({
+                                ...prev,
+                                [system._id]: e.target.value,
+                              }))
+                            }
+                            className="mt-1"
+                          />
+                        </div>
+                        <div className="flex items-end gap-2">
+                          <div className="relative">
+                            <Input
+                              type="file"
+                              accept=".csv,text/csv"
+                              onChange={(e) => handleCsvUpload(system._id, e)}
+                              disabled={isCsvUploading}
+                              className="hidden"
+                              id={`csv-upload-${system._id}`}
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                const input = document.getElementById(
+                                  `csv-upload-${system._id}`
+                                ) as HTMLInputElement;
+                                input?.click();
+                              }}
+                              disabled={
+                                isCsvUploading || !bulkEntryDates[system._id]
+                              }
+                              className="mt-6"
+                            >
+                              {isCsvUploading ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Uploading...
+                                </>
+                              ) : (
+                                <>
+                                  <Upload className="w-4 h-4 mr-2" />
+                                  Upload CSV
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                          <Button
+                            variant="outline"
+                            onClick={() => addBulkRow(system._id)}
+                            className="mt-6"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Row
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Bulk Entry Table */}
+                      {bulkEntryRows[system._id]?.length > 0 ? (
+                        <div className="overflow-x-auto">
+                          <table className="w-full border-collapse">
+                            <thead>
+                              <tr className="border-b border-gray-200">
+                                <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy">
+                                  Horse *
+                                </th>
+                                <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy">
+                                  Country
+                                </th>
+                                <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy">
+                                  Meeting
+                                </th>
+                                <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy">
+                                  Time
+                                </th>
+                                <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy w-20">
+                                  Actions
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {bulkEntryRows[system._id].map((row) => (
+                                <tr
+                                  key={row.id}
+                                  className="border-b border-gray-100 hover:bg-gray-50"
+                                >
+                                  <td className="py-2 px-3">
+                                    <Input
+                                      value={row.horse}
+                                      onChange={(e) =>
+                                        updateBulkRow(
+                                          system._id,
+                                          row.id,
+                                          "horse",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="Horse name"
+                                      className={
+                                        !row.horse.trim()
+                                          ? "border-red-300"
+                                          : ""
+                                      }
+                                    />
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <select
+                                      value={row.country}
+                                      onChange={(e) =>
+                                        updateBulkRow(
+                                          system._id,
+                                          row.id,
+                                          "country",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold text-sm"
+                                    >
+                                      <option value="">Select country</option>
+                                      {COUNTRIES.map((country) => (
+                                        <option key={country} value={country}>
+                                          {country}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <select
+                                      value={row.meeting}
+                                      onChange={(e) =>
+                                        updateBulkRow(
+                                          system._id,
+                                          row.id,
+                                          "meeting",
+                                          e.target.value
+                                        )
+                                      }
+                                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold text-sm"
+                                    >
+                                      <option value="">Select meeting</option>
+                                      {MEETINGS.map((meeting) => (
+                                        <option key={meeting} value={meeting}>
+                                          {meeting}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <Input
+                                      value={row.time}
+                                      onChange={(e) =>
+                                        updateBulkRow(
+                                          system._id,
+                                          row.id,
+                                          "time",
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder="12:45"
+                                      className="text-sm"
+                                    />
+                                  </td>
+                                  <td className="py-2 px-3">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() =>
+                                        removeBulkRow(system._id, row.id)
+                                      }
+                                      className="text-red-600 hover:text-red-700"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                          <p>No selections added yet.</p>
+                          <p className="text-sm mt-1">
+                            Click &quot;Add Row&quot; to start entering
+                            selections
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Submit Button */}
+                      {bulkEntryRows[system._id]?.length > 0 && (
+                        <div className="flex justify-end pt-4 border-t border-gray-200">
+                          <div className="flex items-center gap-4">
+                            <span className="text-sm text-gray-600">
+                              {bulkEntryRows[system._id].length} selection(s)
+                              ready to submit
+                            </span>
+                            <Button
+                              onClick={() => handleBulkSubmit(system._id)}
+                              disabled={
+                                isBulkSubmitting || !bulkEntryDates[system._id]
+                              }
+                            >
+                              {isBulkSubmitting ? (
+                                <>
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                  Submitting...
+                                </>
+                              ) : (
+                                <>
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Submit All
+                                </>
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+                ))}
+              </Tabs>
+            )}
+          </div>
+
+          {/* Edit Dialog */}
+          <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Edit Selection</DialogTitle>
+                <DialogDescription>
+                  Update the selection details.
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmitEdit(onEditSubmit)}>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label htmlFor="edit-systemId">System *</Label>
+                    <select
+                      id="edit-systemId"
+                      {...registerEdit("systemId")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      <option value="">Select a system</option>
+                      {systems.map((system) => (
+                        <option key={system._id} value={system._id}>
+                          {system.name}
+                        </option>
+                      ))}
+                    </select>
+                    {errorsEdit.systemId && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsEdit.systemId.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-date">Date *</Label>
+                    <Input
+                      id="edit-date"
+                      type="date"
+                      {...registerEdit("date")}
+                    />
+                    {errorsEdit.date && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsEdit.date.message}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-country">Country</Label>
+                    <select
+                      id="edit-country"
+                      {...registerEdit("country")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      <option value="">Select a country</option>
+                      {COUNTRIES.map((country) => (
+                        <option key={country} value={country}>
+                          {country}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-meeting">Meeting</Label>
+                    <select
+                      id="edit-meeting"
+                      {...registerEdit("meeting")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
+                    >
+                      <option value="">Select a meeting</option>
+                      {MEETINGS.map((meeting) => (
+                        <option key={meeting} value={meeting}>
+                          {meeting}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-time">Time</Label>
+                    <Input
+                      id="edit-time"
+                      {...registerEdit("time")}
+                      placeholder="12:45"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="edit-horse">Horse *</Label>
+                    <Input
+                      id="edit-horse"
+                      {...registerEdit("horse")}
+                      placeholder="Ronnies Reflection"
+                    />
+                    {errorsEdit.horse && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsEdit.horse.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setEditDialogOpen(false);
+                      setSelectedSelection(null);
+                      resetEdit();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      "Update"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Delete Dialog */}
+          <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+            <DialogContent className="max-w-md">
+              <DialogHeader>
+                <DialogTitle>Delete Selection</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete this selection? This action
+                  cannot be undone.
+                </DialogDescription>
+              </DialogHeader>
+              {selectedSelection && (
+                <div className="py-4">
+                  <p className="text-sm text-gray-600">
+                    <strong>Date:</strong> {selectedSelection.dateISO}
+                    <br />
+                    <strong>System:</strong> {selectedSelection.systemId.name}
+                    <br />
+                    <strong>Horse:</strong> {selectedSelection.horse}
+                  </p>
+                </div>
+              )}
               <DialogFooter>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setCreateDialogOpen(false);
-                    resetCreate();
+                    setDeleteDialogOpen(false);
+                    setSelectedSelection(null);
                   }}
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleDelete}
+                  disabled={isSubmitting}
+                  className="border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700"
+                >
                   {isSubmitting ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Creating...
+                      Deleting...
                     </>
                   ) : (
-                    "Create"
+                    "Delete"
                   )}
                 </Button>
               </DialogFooter>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+            </DialogContent>
+          </Dialog>
 
-      {/* Bulk Entry Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6 mb-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold text-dark-navy mb-2">
-            Bulk Entry - Daily Selections
-          </h2>
-          <p className="text-sm text-gray-600">
-            Select a system and date, then add multiple selections at once
-          </p>
-        </div>
-
-        {systems.length > 0 && (
-          <Tabs
-            value={activeSystemTab}
-            onValueChange={setActiveSystemTab}
-            className="w-full"
-          >
-            <TabsList className="bg-cream/50 border border-gray-200 mb-4">
-              {systems.map((system) => (
-                <TabsTrigger
-                  key={system._id}
-                  value={system._id}
-                  className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
-                >
-                  {system.name}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-
-            {systems.map((system) => (
-              <TabsContent key={system._id} value={system._id}>
-                <div className="space-y-4">
-                  {/* Date Picker */}
-                  <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
-                    <div className="flex-1">
-                      <Label htmlFor={`date-${system._id}`}>Date *</Label>
-                      <Input
-                        id={`date-${system._id}`}
-                        type="date"
-                        value={bulkEntryDates[system._id] || ""}
-                        onChange={(e) =>
-                          setBulkEntryDates((prev) => ({
-                            ...prev,
-                            [system._id]: e.target.value,
-                          }))
-                        }
-                        className="mt-1"
-                      />
-                    </div>
-                    <div className="flex items-end gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => addBulkRow(system._id)}
-                        className="mt-6"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Row
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Bulk Entry Table */}
-                  {bulkEntryRows[system._id]?.length > 0 ? (
-                    <div className="overflow-x-auto">
-                      <table className="w-full border-collapse">
-                        <thead>
-                          <tr className="border-b border-gray-200">
-                            <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy">
-                              Horse *
-                            </th>
-                            <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy">
-                              Country
-                            </th>
-                            <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy">
-                              Meeting
-                            </th>
-                            <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy">
-                              Time
-                            </th>
-                            <th className="text-left py-2 px-3 text-sm font-semibold text-dark-navy w-20">
-                              Actions
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {bulkEntryRows[system._id].map((row) => (
-                            <tr
-                              key={row.id}
-                              className="border-b border-gray-100 hover:bg-gray-50"
-                            >
-                              <td className="py-2 px-3">
-                                <Input
-                                  value={row.horse}
-                                  onChange={(e) =>
-                                    updateBulkRow(
-                                      system._id,
-                                      row.id,
-                                      "horse",
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="Horse name"
-                                  className={
-                                    !row.horse.trim() ? "border-red-300" : ""
-                                  }
-                                />
-                              </td>
-                              <td className="py-2 px-3">
-                                <select
-                                  value={row.country}
-                                  onChange={(e) =>
-                                    updateBulkRow(
-                                      system._id,
-                                      row.id,
-                                      "country",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold text-sm"
-                                >
-                                  <option value="">Select country</option>
-                                  {COUNTRIES.map((country) => (
-                                    <option key={country} value={country}>
-                                      {country}
-                                    </option>
-                                  ))}
-                                </select>
-                              </td>
-                              <td className="py-2 px-3">
-                                <select
-                                  value={row.meeting}
-                                  onChange={(e) =>
-                                    updateBulkRow(
-                                      system._id,
-                                      row.id,
-                                      "meeting",
-                                      e.target.value
-                                    )
-                                  }
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold text-sm"
-                                >
-                                  <option value="">Select meeting</option>
-                                  {MEETINGS.map((meeting) => (
-                                    <option key={meeting} value={meeting}>
-                                      {meeting}
-                                    </option>
-                                  ))}
-                                </select>
-                              </td>
-                              <td className="py-2 px-3">
-                                <Input
-                                  value={row.time}
-                                  onChange={(e) =>
-                                    updateBulkRow(
-                                      system._id,
-                                      row.id,
-                                      "time",
-                                      e.target.value
-                                    )
-                                  }
-                                  placeholder="12:45"
-                                  className="text-sm"
-                                />
-                              </td>
-                              <td className="py-2 px-3">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() =>
-                                    removeBulkRow(system._id, row.id)
-                                  }
-                                  className="text-red-600 hover:text-red-700"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500 border border-dashed border-gray-300 rounded-lg">
-                      <p>No selections added yet.</p>
-                      <p className="text-sm mt-1">
-                        Click &quot;Add Row&quot; to start entering selections
+          {/* Result Dialog */}
+          <Dialog open={resultDialogOpen} onOpenChange={setResultDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedSelection?.hasResult
+                    ? "Edit Results"
+                    : "Add Results"}
+                </DialogTitle>
+                <DialogDescription>
+                  {selectedSelection && (
+                    <>
+                      Update results for{" "}
+                      <strong>{selectedSelection.horse}</strong> on{" "}
+                      {selectedSelection.dateISO}
+                    </>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmitResult(onResultSubmit)} noValidate>
+                <div className="space-y-4 py-4">
+                  {selectedSelection && (
+                    <div className="bg-gray-50 p-3 rounded-md mb-4">
+                      <p className="text-sm text-gray-600">
+                        <strong>System:</strong>{" "}
+                        {selectedSelection.systemId.name}
+                        <br />
+                        <strong>Meeting:</strong>{" "}
+                        {selectedSelection.meeting || "N/A"}
+                        <br />
+                        <strong>Time:</strong> {selectedSelection.time || "N/A"}
                       </p>
                     </div>
                   )}
 
-                  {/* Submit Button */}
-                  {bulkEntryRows[system._id]?.length > 0 && (
-                    <div className="flex justify-end pt-4 border-t border-gray-200">
-                      <div className="flex items-center gap-4">
-                        <span className="text-sm text-gray-600">
-                          {bulkEntryRows[system._id].length} selection(s) ready
-                          to submit
-                        </span>
-                        <Button
-                          onClick={() => handleBulkSubmit(system._id)}
-                          disabled={
-                            isBulkSubmitting || !bulkEntryDates[system._id]
-                          }
-                        >
-                          {isBulkSubmitting ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Submitting...
-                            </>
-                          ) : (
-                            <>
-                              <Plus className="w-4 h-4 mr-2" />
-                              Submit All
-                            </>
+                  <div>
+                    <Label htmlFor="result">Result *</Label>
+                    <select
+                      id="result"
+                      {...registerResult("result")}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold mt-1"
+                    >
+                      <option value="">Select result</option>
+                      <option value="WON">Won</option>
+                      <option value="LOST">Lost</option>
+                      <option value="PLACED">Placed</option>
+                    </select>
+                    {errorsResult.result && (
+                      <p className="text-red-500 text-sm mt-1">
+                        {errorsResult.result.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="winBsp">Win BSP (Optional)</Label>
+                      <Input
+                        id="winBsp"
+                        type="number"
+                        step="0.01"
+                        {...registerResult("winBsp", {
+                          setValueAs: (v) => {
+                            if (
+                              v === "" ||
+                              v === null ||
+                              v === undefined ||
+                              v === "0.00" ||
+                              v === 0
+                            ) {
+                              return undefined;
+                            }
+                            return v;
+                          },
+                        })}
+                        placeholder="0.00"
+                        className="mt-1"
+                      />
+                      {errorsResult.winBsp && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {String(
+                            errorsResult.winBsp.message || "Invalid input"
                           )}
-                        </Button>
-                      </div>
+                        </p>
+                      )}
                     </div>
-                  )}
+                    <div>
+                      <Label htmlFor="placeBsp">Place BSP (Optional)</Label>
+                      <Input
+                        id="placeBsp"
+                        type="number"
+                        step="0.01"
+                        {...registerResult("placeBsp", {
+                          setValueAs: (v) => {
+                            // Convert empty, null, undefined, 0, or "0.00" to undefined
+                            if (
+                              v === "" ||
+                              v === null ||
+                              v === undefined ||
+                              v === "0.00" ||
+                              v === 0 ||
+                              (typeof v === "string" && v.trim() === "")
+                            ) {
+                              return undefined;
+                            }
+                            // Convert string numbers to actual numbers
+                            if (typeof v === "string") {
+                              const num = Number(v);
+                              return isNaN(num) ? undefined : num;
+                            }
+                            return v;
+                          },
+                          required: false,
+                        })}
+                        placeholder="0.00"
+                        className="mt-1"
+                      />
+                      {errorsResult.placeBsp && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {typeof errorsResult.placeBsp === "object" &&
+                          "message" in errorsResult.placeBsp
+                            ? String(errorsResult.placeBsp.message)
+                            : "Invalid input"}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> Win PL, Running Win PL, Place PL,
+                      and Running Place PL will be calculated automatically on
+                      the backend.
+                    </p>
+                  </div>
                 </div>
-              </TabsContent>
-            ))}
-          </Tabs>
-        )}
-      </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setResultDialogOpen(false);
+                      setSelectedSelection(null);
+                      resetResult();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save Results"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
 
-      {/* Edit Dialog */}
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Selection</DialogTitle>
-            <DialogDescription>Update the selection details.</DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmitEdit(onEditSubmit)}>
-            <div className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="edit-systemId">System *</Label>
-                <select
-                  id="edit-systemId"
-                  {...registerEdit("systemId")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-                >
-                  <option value="">Select a system</option>
-                  {systems.map((system) => (
-                    <option key={system._id} value={system._id}>
-                      {system.name}
-                    </option>
-                  ))}
-                </select>
-                {errorsEdit.systemId && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errorsEdit.systemId.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="edit-date">Date *</Label>
-                <Input id="edit-date" type="date" {...registerEdit("date")} />
-                {errorsEdit.date && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errorsEdit.date.message}
-                  </p>
-                )}
-              </div>
-              <div>
-                <Label htmlFor="edit-country">Country</Label>
-                <select
-                  id="edit-country"
-                  {...registerEdit("country")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-                >
-                  <option value="">Select a country</option>
-                  {COUNTRIES.map((country) => (
-                    <option key={country} value={country}>
-                      {country}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="edit-meeting">Meeting</Label>
-                <select
-                  id="edit-meeting"
-                  {...registerEdit("meeting")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold"
-                >
-                  <option value="">Select a meeting</option>
-                  {MEETINGS.map((meeting) => (
-                    <option key={meeting} value={meeting}>
-                      {meeting}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <Label htmlFor="edit-time">Time</Label>
-                <Input
-                  id="edit-time"
-                  {...registerEdit("time")}
-                  placeholder="12:45"
-                />
-              </div>
-              <div>
-                <Label htmlFor="edit-horse">Horse *</Label>
-                <Input
-                  id="edit-horse"
-                  {...registerEdit("horse")}
-                  placeholder="Ronnies Reflection"
-                />
-                {errorsEdit.horse && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errorsEdit.horse.message}
-                  </p>
-                )}
-              </div>
+          {/* Selections Table */}
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="mb-4 pb-4 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-dark-navy mb-2">
+                Selections Table
+              </h2>
+              {activeSystemTab && systems.length > 0 && (
+                <p className="text-sm text-gray-600">
+                  Showing selections for:{" "}
+                  <span className="font-semibold text-dark-navy">
+                    {systems.find((s) => s._id === activeSystemTab)?.name ||
+                      "All Systems"}
+                  </span>
+                </p>
+              )}
             </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setEditDialogOpen(false);
-                  setSelectedSelection(null);
-                  resetEdit();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update"
+            {loading ? (
+              <div className="text-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
+                <p className="text-gray-600 mt-4">Loading selections...</p>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto -mx-6 px-6">
+                  <table className="w-full min-w-[800px]">
+                    <thead>
+                      {table.getHeaderGroups().map((headerGroup) => (
+                        <tr
+                          key={headerGroup.id}
+                          className="border-b border-gray-200"
+                        >
+                          {headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="text-left py-3 px-4 text-sm font-semibold text-dark-navy whitespace-nowrap"
+                            >
+                              {header.isPlaceholder
+                                ? null
+                                : flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                            </th>
+                          ))}
+                        </tr>
+                      ))}
+                    </thead>
+                    <tbody>
+                      {table.getRowModel().rows.map((row) => (
+                        <tr
+                          key={row.id}
+                          className="border-b border-gray-100 hover:bg-gray-50"
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <td
+                              key={cell.id}
+                              className="py-3 px-4 text-sm text-dark-navy whitespace-nowrap"
+                            >
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext()
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                {selections.length === 0 && !loading && (
+                  <div className="text-center py-12 text-dark-navy">
+                    No selections found. Create your first selection above.
+                  </div>
                 )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
-      {/* Delete Dialog */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Delete Selection</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this selection? This action cannot
-              be undone.
-            </DialogDescription>
-          </DialogHeader>
-          {selectedSelection && (
-            <div className="py-4">
-              <p className="text-sm text-gray-600">
-                <strong>Date:</strong> {selectedSelection.dateISO}
-                <br />
-                <strong>System:</strong> {selectedSelection.systemId.name}
-                <br />
-                <strong>Horse:</strong> {selectedSelection.horse}
+                {hasMore && (
+                  <div className="mt-6 text-center">
+                    <Button
+                      variant="default"
+                      size="lg"
+                      onClick={handleLoadMore}
+                      disabled={loadingMore}
+                    >
+                      {loadingMore ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Loading...
+                        </>
+                      ) : (
+                        "Load More Selections"
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </TabsContent>
+
+        {/* Manage Results Tab */}
+        <TabsContent value="results" className="space-y-6">
+          <div className="bg-white border border-gray-200 rounded-lg p-6">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold text-dark-navy mb-2">
+                Upload Results CSV
+              </h2>
+              <p className="text-sm text-gray-600 mb-4">
+                Upload a CSV file to update results for existing selections
+                across all systems. The CSV will match selections by date, time,
+                and horse name.
               </p>
+              <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-4">
+                <p className="text-sm font-semibold text-blue-900">
+                  Upload exactly the same CSV as RBD without editing it.
+                </p>
+                {/* <ul className="text-xs text-blue-800 list-disc list-inside space-y-1">
+                  <li>Date of Race (format: DD/MM/YYYY)</li>
+                  <li>Country</li>
+                  <li>Track</li>
+                  <li>Time</li>
+                  <li>Horse</li>
+                  <li>Betfair SP</li>
+                  <li>Betfair Lay Return</li>
+                  <li>Betfair Place SP</li>
+                  <li>Place Lay Return</li>
+                </ul> */}
+              </div>
             </div>
-          )}
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                setDeleteDialogOpen(false);
-                setSelectedSelection(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleDelete}
-              disabled={isSubmitting}
-              className="border-red-600 text-red-600 hover:bg-red-50 hover:text-red-700"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Deleting...
-                </>
-              ) : (
-                "Delete"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
-      {/* Result Dialog */}
-      <Dialog open={resultDialogOpen} onOpenChange={setResultDialogOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>
-              {selectedSelection?.hasResult ? "Edit Results" : "Add Results"}
-            </DialogTitle>
-            <DialogDescription>
-              {selectedSelection && (
-                <>
-                  Update results for <strong>{selectedSelection.horse}</strong>{" "}
-                  on {selectedSelection.dateISO}
-                </>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleSubmitResult(onResultSubmit)} noValidate>
-            <div className="space-y-4 py-4">
-              {selectedSelection && (
-                <div className="bg-gray-50 p-3 rounded-md mb-4">
-                  <p className="text-sm text-gray-600">
-                    <strong>System:</strong> {selectedSelection.systemId.name}
-                    <br />
-                    <strong>Meeting:</strong>{" "}
-                    {selectedSelection.meeting || "N/A"}
-                    <br />
-                    <strong>Time:</strong> {selectedSelection.time || "N/A"}
-                  </p>
-                </div>
-              )}
-
+            <div className="space-y-4">
+              {/* CSV Upload */}
               <div>
-                <Label htmlFor="result">Result *</Label>
-                <select
-                  id="result"
-                  {...registerResult("result")}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold mt-1"
-                >
-                  <option value="">Select result</option>
-                  <option value="WON">Won</option>
-                  <option value="LOST">Lost</option>
-                  <option value="PLACED">Placed</option>
-                </select>
-                {errorsResult.result && (
-                  <p className="text-red-500 text-sm mt-1">
-                    {errorsResult.result.message}
-                  </p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="winBsp">Win BSP (Optional)</Label>
+                <Label htmlFor="results-csv-upload">CSV File *</Label>
+                <div className="mt-1">
                   <Input
-                    id="winBsp"
-                    type="number"
-                    step="0.01"
-                    {...registerResult("winBsp", {
-                      setValueAs: (v) => {
-                        if (
-                          v === "" ||
-                          v === null ||
-                          v === undefined ||
-                          v === "0.00" ||
-                          v === 0
-                        ) {
-                          return undefined;
-                        }
-                        return v;
-                      },
-                    })}
-                    placeholder="0.00"
-                    className="mt-1"
+                    type="file"
+                    accept=".csv,text/csv"
+                    onChange={handleResultsCsvUpload}
+                    disabled={isResultsUploading}
+                    id="results-csv-upload"
+                    className="cursor-pointer"
                   />
-                  {errorsResult.winBsp && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {String(errorsResult.winBsp.message || "Invalid input")}
-                    </p>
-                  )}
                 </div>
-                <div>
-                  <Label htmlFor="placeBsp">Place BSP (Optional)</Label>
-                  <Input
-                    id="placeBsp"
-                    type="number"
-                    step="0.01"
-                    {...registerResult("placeBsp", {
-                      setValueAs: (v) => {
-                        // Convert empty, null, undefined, 0, or "0.00" to undefined
-                        if (
-                          v === "" ||
-                          v === null ||
-                          v === undefined ||
-                          v === "0.00" ||
-                          v === 0 ||
-                          (typeof v === "string" && v.trim() === "")
-                        ) {
-                          return undefined;
-                        }
-                        // Convert string numbers to actual numbers
-                        if (typeof v === "string") {
-                          const num = Number(v);
-                          return isNaN(num) ? undefined : num;
-                        }
-                        return v;
-                      },
-                      required: false,
-                    })}
-                    placeholder="0.00"
-                    className="mt-1"
-                  />
-                  {errorsResult.placeBsp && (
-                    <p className="text-red-500 text-sm mt-1">
-                      {typeof errorsResult.placeBsp === "object" &&
-                      "message" in errorsResult.placeBsp
-                        ? String(errorsResult.placeBsp.message)
-                        : "Invalid input"}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> Win PL, Running Win PL, Place PL, and
-                  Running Place PL will be calculated automatically on the
-                  backend.
+                <p className="text-xs text-gray-500 mt-1">
+                  Upload a CSV file with the results data. The file will be
+                  processed to match existing selections across all systems.
                 </p>
               </div>
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => {
-                  setResultDialogOpen(false);
-                  setSelectedSelection(null);
-                  resetResult();
-                }}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  "Save Results"
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
-      {/* Selections Table */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="mb-4 pb-4 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-dark-navy mb-2">
-            Selections Table
-          </h2>
-          {activeSystemTab && systems.length > 0 && (
-            <p className="text-sm text-gray-600">
-              Showing selections for:{" "}
-              <span className="font-semibold text-dark-navy">
-                {systems.find((s) => s._id === activeSystemTab)?.name ||
-                  "All Systems"}
-              </span>
-            </p>
-          )}
-        </div>
-        {loading ? (
-          <div className="text-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-            <p className="text-gray-600 mt-4">Loading selections...</p>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto -mx-6 px-6">
-              <table className="w-full min-w-[800px]">
-                <thead>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                    <tr
-                      key={headerGroup.id}
-                      className="border-b border-gray-200"
-                    >
-                      {headerGroup.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className="text-left py-3 px-4 text-sm font-semibold text-dark-navy whitespace-nowrap"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </th>
-                      ))}
-                    </tr>
-                  ))}
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="py-3 px-4 text-sm text-dark-navy whitespace-nowrap"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {selections.length === 0 && !loading && (
-              <div className="text-center py-12 text-dark-navy">
-                No selections found. Create your first selection above.
-              </div>
-            )}
-
-            {hasMore && (
-              <div className="mt-6 text-center">
+              {/* Upload Button */}
+              <div className="pt-4 border-t border-gray-200">
                 <Button
-                  variant="default"
-                  size="lg"
-                  onClick={handleLoadMore}
-                  disabled={loadingMore}
+                  type="button"
+                  onClick={() => {
+                    const input = document.getElementById(
+                      "results-csv-upload"
+                    ) as HTMLInputElement;
+                    input?.click();
+                  }}
+                  disabled={isResultsUploading}
+                  className="w-full sm:w-auto"
                 >
-                  {loadingMore ? (
+                  {isResultsUploading ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Loading...
+                      Uploading and Processing...
                     </>
                   ) : (
-                    "Load More Selections"
+                    <>
+                      <Upload className="w-4 h-4 mr-2" />
+                      Upload Results CSV
+                    </>
                   )}
                 </Button>
               </div>
-            )}
-          </>
-        )}
-      </div>
+
+              {/* Info Box */}
+              <div className="bg-gray-50 border border-gray-200 rounded-md p-4 mt-4">
+                <p className="text-sm text-gray-700">
+                  <strong>Note:</strong> The system will match each row in your
+                  CSV to existing selections across all systems based on:
+                </p>
+                <ul className="text-xs text-gray-600 list-disc list-inside mt-2 space-y-1">
+                  <li>Date of Race (converted to ISO format)</li>
+                  <li>Time</li>
+                  <li>Horse name</li>
+                </ul>
+                <p className="text-xs text-gray-600 mt-2">
+                  Rows that cannot be matched will be reported after upload.
+                  Results will be calculated automatically based on Betfair SP
+                  and Lay Return values.
+                </p>
+              </div>
+            </div>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
