@@ -18,7 +18,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import toast from "react-hot-toast";
-import { Plus, Edit, Trash2, Loader2, Upload } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Loader2,
+  Upload,
+  X,
+  AlertTriangle,
+} from "lucide-react";
 import {
   useReactTable,
   getCoreRowModel,
@@ -145,6 +153,21 @@ export default function AdminSelectionsPage() {
   // Results upload state
   const [isResultsUploading, setIsResultsUploading] = useState(false);
 
+  // Unmatched selections notification state
+  interface UnmatchedSelection {
+    dateISO?: string;
+    date?: string;
+    time: string;
+    horse: string;
+    reason: string;
+    systemId?: string;
+    systemName?: string;
+    row?: number;
+  }
+  const [unmatchedSelections, setUnmatchedSelections] = useState<
+    UnmatchedSelection[]
+  >([]);
+
   const {
     register: registerCreate,
     handleSubmit: handleSubmitCreate,
@@ -175,6 +198,23 @@ export default function AdminSelectionsPage() {
     mode: "onSubmit",
     shouldUnregister: false,
   });
+
+  // Load unmatched selections from localStorage on mount
+  useEffect(() => {
+    const storedUnmatched = localStorage.getItem("admin_unmatched_selections");
+    if (storedUnmatched) {
+      try {
+        const parsed = JSON.parse(storedUnmatched);
+        setUnmatchedSelections(parsed);
+      } catch (err) {
+        console.error(
+          "Error parsing unmatched selections from localStorage:",
+          err
+        );
+        localStorage.removeItem("admin_unmatched_selections");
+      }
+    }
+  }, []);
 
   // Fetch systems
   useEffect(() => {
@@ -674,14 +714,23 @@ export default function AdminSelectionsPage() {
       );
 
       const result = await response.json();
+      console.log("result", result);
       if (result.success) {
         const updatedCount = result.updated || 0;
         toast.success(
           `Successfully uploaded and updated ${updatedCount} selection(s) with results`
         );
 
-        // Show warnings if there are unmatched rows or errors
+        // Store unmatched selections in localStorage and state
         if (result.unmatched && result.unmatched.length > 0) {
+          // Save to localStorage for persistence
+          localStorage.setItem(
+            "admin_unmatched_selections",
+            JSON.stringify(result.unmatched)
+          );
+          // Update state to show notification
+          setUnmatchedSelections(result.unmatched);
+
           toast.error(
             `${result.unmatched.length} row(s) could not be matched to existing selections`,
             { duration: 5000 }
@@ -710,6 +759,11 @@ export default function AdminSelectionsPage() {
       setIsResultsUploading(false);
       event.target.value = ""; // Reset file input
     }
+  };
+
+  const handleDismissUnmatched = () => {
+    setUnmatchedSelections([]);
+    localStorage.removeItem("admin_unmatched_selections");
   };
 
   const columns: ColumnDef<Selection>[] = [
@@ -897,6 +951,68 @@ export default function AdminSelectionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
+      {/* Unmatched Selections Notification */}
+      {unmatchedSelections.length > 0 && (
+        <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start flex-1">
+              <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold text-yellow-900 mb-2">
+                  {unmatchedSelections.length} Unmatched Selection
+                  {unmatchedSelections.length !== 1 ? "s" : ""} Found
+                </h3>
+                <p className="text-xs text-yellow-800 mb-3">
+                  The following selections could not be matched to rows in the
+                  uploaded CSV:
+                </p>
+                <div className="max-h-64 overflow-y-auto">
+                  <div className="space-y-2">
+                    {unmatchedSelections.map((item, index) => (
+                      <div
+                        key={index}
+                        className="bg-white border border-yellow-200 rounded p-2 text-xs"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">
+                              {item.horse}
+                            </p>
+                            <p className="text-gray-600 mt-1">
+                              {item.dateISO || item.date} at {item.time}
+                              {item.systemName && (
+                                <span className="ml-2 text-gray-500">
+                                  ({item.systemName})
+                                </span>
+                              )}
+                            </p>
+                            {item.reason && (
+                              <p className="text-gray-500 mt-1 italic">
+                                {item.reason}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={handleDismissUnmatched}
+              className="ml-4 text-yellow-700 hover:text-yellow-900 hover:bg-yellow-100 flex-shrink-0"
+              aria-label="Dismiss notification"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-dark-navy mb-2">
           Admin Dashboard

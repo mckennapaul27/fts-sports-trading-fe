@@ -384,7 +384,7 @@ export default function SelectionsPage() {
             }
           >
             {pl >= 0 ? "+" : ""}
-            {pl.toFixed(1)}
+            {pl}
           </span>
         );
       },
