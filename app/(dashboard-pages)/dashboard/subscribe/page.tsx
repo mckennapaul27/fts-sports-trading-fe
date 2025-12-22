@@ -8,13 +8,10 @@ import { PlanDisplay } from "@/components/sections/plan-display";
 import { Button } from "@/components/ui/button";
 import { SystemSelectionDialog } from "@/components/sections/system-selection-dialog";
 import { useSession } from "next-auth/react";
+import { getProductIdToSystemName } from "@/config/stripe-products";
 
 // Map product IDs to system names
-const productIdToSystemName: Record<string, string> = {
-  prod_TZZbjLqthXdjxx: "System 1",
-  prod_TZZcUfjAmtJfkg: "System 2",
-  prod_TZZcuPVww3QyDm: "System 3",
-};
+const productIdToSystemName = getProductIdToSystemName();
 
 export default function SubscribePage() {
   const { data: session } = useSession();

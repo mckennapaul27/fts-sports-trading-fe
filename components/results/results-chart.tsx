@@ -29,13 +29,9 @@ interface ResultsChartProps {
   totalBets?: number;
 }
 
+// Format points helper (2 decimal places)
 function formatCurrency(num: number): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  return num.toFixed(2);
 }
 
 function calculateMaxDrawdown(cumulativeData: CumulativePLData[]): number {
@@ -92,7 +88,7 @@ export function ResultsChart({
               text: undefined,
             },
             labels: {
-              format: "£{value}",
+              format: "{value} pts",
               style: {
                 color: "var(--color-dark-navy)",
                 fontFamily: "var(--font-karla)",
@@ -126,7 +122,7 @@ export function ResultsChart({
           },
           tooltip: {
             formatter: function () {
-              return `<b>${this.x}</b><br/>£${this.y?.toFixed(2)}`;
+              return `<b>${this.x}</b><br/>${this.y?.toFixed(2)} pts`;
             },
             style: {
               fontFamily: "var(--font-karla)",
@@ -157,7 +153,7 @@ export function ResultsChart({
               text: undefined,
             },
             labels: {
-              format: "£{value}",
+              format: "{value} pts",
               style: {
                 color: "var(--color-dark-navy)",
                 fontFamily: "var(--font-karla)",
@@ -188,9 +184,9 @@ export function ResultsChart({
           tooltip: {
             formatter: function () {
               const month = monthlyData[this.index];
-              return `<b>${this.x}</b><br/>£${this.y?.toFixed(2)}<br/>Bets: ${
-                month?.bets || 0
-              }`;
+              return `<b>${this.x}</b><br/>${this.y?.toFixed(
+                2
+              )} pts<br/>Bets: ${month?.bets || 0}`;
             },
             style: {
               fontFamily: "var(--font-karla)",

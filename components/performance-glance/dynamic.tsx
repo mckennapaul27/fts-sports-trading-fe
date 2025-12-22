@@ -45,13 +45,9 @@ function formatNumber(num: number): string {
   return new Intl.NumberFormat("en-GB").format(num);
 }
 
+// Format points helper (2 decimal places)
 function formatCurrency(num: number): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  return num.toFixed(2);
 }
 
 export function PerformanceGlance() {
@@ -145,7 +141,7 @@ export function PerformanceGlance() {
             text: undefined,
           },
           labels: {
-            format: "£{value}",
+            format: "{value} pts",
             style: {
               color: "var(--color-dark-navy)",
               fontFamily: "var(--font-karla)",
@@ -179,7 +175,7 @@ export function PerformanceGlance() {
         },
         tooltip: {
           formatter: function () {
-            return `<b>${this.x}</b><br/>£${this.y?.toFixed(2)}`;
+            return `<b>${this.x}</b><br/>${this.y?.toFixed(2)} pts`;
           },
           style: {
             fontFamily: "var(--font-karla)",

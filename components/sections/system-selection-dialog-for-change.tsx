@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { getProductIdToSystemName } from "@/config/stripe-products";
 
 interface System {
   id: string;
@@ -18,26 +19,27 @@ interface System {
   productId: string;
 }
 
-const systems: System[] = [
-  {
-    id: "system-1",
-    name: "System 1",
-    slug: "system-1",
-    productId: "prod_TZZbjLqthXdjxx",
-  },
-  {
-    id: "system-2",
-    name: "System 2",
-    slug: "system-2",
-    productId: "prod_TZZcUfjAmtJfkg",
-  },
-  {
-    id: "system-3",
-    name: "System 3",
-    slug: "system-3",
-    productId: "prod_TZZcuPVww3QyDm",
-  },
-];
+// Generate systems array based on environment
+const getSystems = (): System[] => {
+  const productIdToSystemName = getProductIdToSystemName();
+  const systems: System[] = [];
+
+  Object.entries(productIdToSystemName).forEach(
+    ([productId, systemName], index) => {
+      const systemNumber = index + 1;
+      systems.push({
+        id: `system-${systemNumber}`,
+        name: systemName,
+        slug: `system-${systemNumber}`,
+        productId: productId,
+      });
+    }
+  );
+
+  return systems;
+};
+
+const systems = getSystems();
 
 interface SystemSelectionDialogForChangeProps {
   open: boolean;

@@ -1,3 +1,5 @@
+import { PRODUCT_IDS } from "@/config/stripe-products";
+
 function CheckmarkIcon() {
   return (
     <svg
@@ -67,15 +69,6 @@ const planPrices: Record<string, { price: string; period: string }> = {
     price: "£240",
     period: "/year",
   },
-};
-
-// Product IDs mapping
-const PRODUCT_IDS = {
-  SINGLE_SYSTEM_1: "prod_TZZbjLqthXdjxx",
-  SINGLE_SYSTEM_2: "prod_TZZcUfjAmtJfkg",
-  SINGLE_SYSTEM_3: "prod_TZZcuPVww3QyDm",
-  ALL_SYSTEMS_MONTHLY: "prod_TZZcEMlv2cNNWl",
-  ALL_SYSTEMS_YEARLY: "prod_TZZdcgHBZ13uZ9",
 };
 
 export function PlanDisplay({

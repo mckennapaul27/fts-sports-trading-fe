@@ -37,14 +37,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { COUNTRIES, MEETINGS } from "@/data";
 const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
 
-// Format currency helper
+// Format points helper (2 decimal places)
 function formatCurrency(num: number): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  return num.toFixed(2);
 }
 
 interface System {
@@ -816,7 +811,9 @@ export default function AdminSelectionsPage() {
             className={
               result === "LOST"
                 ? "text-green font-semibold"
-                : result === "PLACED"
+                : result === "WON"
+                ? "text-red-600 font-semibold"
+                : result === "NR" || result === "VOID" || result === "CANCELLED"
                 ? "text-yellow-600 font-semibold"
                 : "text-red-600 font-semibold"
             }
@@ -873,34 +870,34 @@ export default function AdminSelectionsPage() {
         </span>
       ),
     },
-    {
-      accessorKey: "placeBsp",
-      header: "Place BSP",
-      cell: ({ row }) => (
-        <span className={row.original.hasResult ? "" : "text-gray-400"}>
-          {row.original.placeBsp ? row.original.placeBsp.toFixed(2) : "-"}
-        </span>
-      ),
-    },
-    {
-      accessorKey: "placePL",
-      header: "Place PL",
-      cell: ({ row }) => (
-        <span
-          className={
-            row.original.hasResult
-              ? row.original.placePL && row.original.placePL >= 0
-                ? "text-green-600 font-semibold"
-                : "text-red-600 font-semibold"
-              : "text-gray-400"
-          }
-        >
-          {row.original.placePL !== undefined
-            ? row.original.placePL.toFixed(2)
-            : "-"}
-        </span>
-      ),
-    },
+    // {
+    //   accessorKey: "placeBsp",
+    //   header: "Place BSP",
+    //   cell: ({ row }) => (
+    //     <span className={row.original.hasResult ? "" : "text-gray-400"}>
+    //       {row.original.placeBsp ? row.original.placeBsp.toFixed(2) : "-"}
+    //     </span>
+    //   ),
+    // },
+    // {
+    //   accessorKey: "placePL",
+    //   header: "Place PL",
+    //   cell: ({ row }) => (
+    //     <span
+    //       className={
+    //         row.original.hasResult
+    //           ? row.original.placePL && row.original.placePL >= 0
+    //             ? "text-green-600 font-semibold"
+    //             : "text-red-600 font-semibold"
+    //           : "text-gray-400"
+    //       }
+    //     >
+    //       {row.original.placePL !== undefined
+    //         ? row.original.placePL.toFixed(2)
+    //         : "-"}
+    //     </span>
+    //   ),
+    // },
     {
       id: "actions",
       header: "Actions",
@@ -1670,9 +1667,11 @@ export default function AdminSelectionsPage() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold mt-1"
                     >
                       <option value="">Select result</option>
-                      <option value="WON">Won</option>
-                      <option value="LOST">Lost</option>
-                      <option value="PLACED">Placed</option>
+                      <option value="WON">WON</option>
+                      <option value="LOST">LOST</option>
+                      <option value="NR">NR</option>
+                      <option value="VOID">VOID</option>
+                      <option value="CANCELLED">CANCELLED</option>
                     </select>
                     {errorsResult.result && (
                       <p className="text-red-500 text-sm mt-1">
@@ -1713,7 +1712,7 @@ export default function AdminSelectionsPage() {
                         </p>
                       )}
                     </div>
-                    <div>
+                    {/* <div>
                       <Label htmlFor="placeBsp">Place BSP (Optional)</Label>
                       <Input
                         id="placeBsp"
@@ -1752,14 +1751,13 @@ export default function AdminSelectionsPage() {
                             : "Invalid input"}
                         </p>
                       )}
-                    </div>
+                    </div> */}
                   </div>
 
                   <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
                     <p className="text-sm text-blue-800">
-                      <strong>Note:</strong> Win PL, Running Win PL, Place PL,
-                      and Running Place PL will be calculated automatically on
-                      the backend.
+                      <strong>Note:</strong> Win PL and Running Win PL will be
+                      calculated automatically on the backend.
                     </p>
                   </div>
                 </div>

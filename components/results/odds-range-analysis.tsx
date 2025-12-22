@@ -19,13 +19,9 @@ function formatNumber(num: number): string {
   return new Intl.NumberFormat("en-GB").format(num);
 }
 
+// Format points helper (2 decimal places)
 function formatCurrency(num: number): string {
-  return new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
+  return num.toFixed(2);
 }
 
 export function OddsRangeAnalysis({

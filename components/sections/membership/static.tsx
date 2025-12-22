@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { PRODUCT_IDS } from "@/config/stripe-products";
 
 function CheckmarkIcon() {
   return (
@@ -70,7 +71,7 @@ const plans: PricingPlan[] = [
     buttonVariant: "secondary",
     isPopular: true,
     priceBgColor: "bg-gold/20",
-    productId: "prod_TZZcEMlv2cNNWl",
+    productId: PRODUCT_IDS.ALL_SYSTEMS_MONTHLY,
     planName: "All Systems - Monthly",
   },
   {
@@ -88,7 +89,7 @@ const plans: PricingPlan[] = [
     ],
     buttonText: "Choose Plan",
     buttonVariant: "default",
-    productId: "prod_TZZdcgHBZ13uZ9",
+    productId: PRODUCT_IDS.ALL_SYSTEMS_YEARLY,
     planName: "All Systems - Yearly",
   },
 ];

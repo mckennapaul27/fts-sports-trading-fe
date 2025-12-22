@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { SystemSelectionDialog } from "../system-selection-dialog";
+import { PRODUCT_IDS, getAllSystemSlugsString } from "@/config/stripe-products";
 
 function CheckmarkIcon() {
   return (
@@ -76,7 +77,7 @@ const plans: PricingPlan[] = [
     buttonVariant: "secondary",
     isPopular: true,
     priceBgColor: "bg-gold/20",
-    productId: "prod_TZZcEMlv2cNNWl",
+    productId: PRODUCT_IDS.ALL_SYSTEMS_MONTHLY,
     planName: "All Systems - Monthly",
   },
   {
@@ -94,7 +95,7 @@ const plans: PricingPlan[] = [
     ],
     buttonText: "Choose Plan",
     buttonVariant: "default",
-    productId: "prod_TZZdcgHBZ13uZ9",
+    productId: PRODUCT_IDS.ALL_SYSTEMS_YEARLY,
     planName: "All Systems - Yearly",
   },
 ];
@@ -112,8 +113,8 @@ export function Membership({}: MembershipProps) {
     if (plan.title === "SINGLE SYSTEM") {
       setSystemDialogOpen(true);
     } else if (plan.productId && plan.planName) {
-      // For "All Systems" plans, pass all three system slugs
-      const allSystemSlugs = "system-1,system-2,system-3";
+      // For "All Systems" plans, pass all system slugs
+      const allSystemSlugs = getAllSystemSlugsString();
 
       // Route based on authentication status
       if (isAuthenticated) {

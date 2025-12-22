@@ -27,6 +27,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { SystemSelectionDialogForChange } from "@/components/sections/system-selection-dialog-for-change";
+import {
+  PRODUCT_IDS,
+  getSingleSystemProductIds,
+  getAllSystemSlugsString,
+  getAllSystemSlugsArray,
+} from "@/config/stripe-products";
 
 interface BillingData {
   hasSubscription: boolean;
@@ -308,11 +314,7 @@ export default function BillingsPage() {
       subtitle: "Perfect for testing one system",
       price: "£10",
       period: "/month",
-      productIds: [
-        "prod_TZZbjLqthXdjxx", // System 1
-        "prod_TZZcUfjAmtJfkg", // System 2
-        "prod_TZZcuPVww3QyDm", // System 3
-      ],
+      productIds: getSingleSystemProductIds(),
       priceIds: [
         "price_1ScQSYDVmAeT8ZSFgfBMGFRe", // System 1
         "price_1ScQSrDVmAeT8ZSFY0xxaGFU", // System 2
@@ -333,7 +335,7 @@ export default function BillingsPage() {
       subtitle: "Full portfolio access",
       price: "£30",
       period: "/month",
-      productId: "prod_TZZcEMlv2cNNWl",
+      productId: PRODUCT_IDS.ALL_SYSTEMS_MONTHLY,
       priceId: "price_1ScQTNDVmAeT8ZSF5C6eupMx",
       features: [
         "Access to all systems",
@@ -352,7 +354,7 @@ export default function BillingsPage() {
       subtitle: "Best value for committed traders",
       price: "£240",
       period: "/year",
-      productId: "prod_TZZdcgHBZ13uZ9",
+      productId: PRODUCT_IDS.ALL_SYSTEMS_YEARLY,
       priceId: "price_1ScQTkDVmAeT8ZSFCjHUdkvO",
       features: [
         "Access to all systems",
@@ -387,17 +389,13 @@ export default function BillingsPage() {
     if (!currentProductId) return false;
 
     // If moving to All Systems Yearly, it's always an upgrade
-    if (newPlan.productId === "prod_TZZdcgHBZ13uZ9") {
+    if (newPlan.productId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY) {
       return true;
     }
 
     // If moving to All Systems Monthly from Single System, it's an upgrade
-    if (newPlan.productId === "prod_TZZcEMlv2cNNWl") {
-      const singleSystemProductIds = [
-        "prod_TZZbjLqthXdjxx",
-        "prod_TZZcUfjAmtJfkg",
-        "prod_TZZcuPVww3QyDm",
-      ];
+    if (newPlan.productId === PRODUCT_IDS.ALL_SYSTEMS_MONTHLY) {
+      const singleSystemProductIds = getSingleSystemProductIds();
       return singleSystemProductIds.includes(currentProductId);
     }
 
@@ -419,10 +417,10 @@ export default function BillingsPage() {
     const currentProductId = getCurrentPlanProductId();
     if (!currentProductId) {
       // No current plan, show default text
-      if (plan.productId === "prod_TZZdcgHBZ13uZ9") {
+      if (plan.productId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY) {
         return "Upgrade & Save";
       }
-      if (plan.productId === "prod_TZZcEMlv2cNNWl") {
+      if (plan.productId === PRODUCT_IDS.ALL_SYSTEMS_MONTHLY) {
         return "Upgrade";
       }
       return "Select";
@@ -431,11 +429,7 @@ export default function BillingsPage() {
     // Single System plan
     if (plan.requiresSystemSelection) {
       // Check if already on a single system
-      const singleSystemProductIds = [
-        "prod_TZZbjLqthXdjxx",
-        "prod_TZZcUfjAmtJfkg",
-        "prod_TZZcuPVww3QyDm",
-      ];
+      const singleSystemProductIds = getSingleSystemProductIds();
       if (singleSystemProductIds.includes(currentProductId)) {
         return "Switch System";
       }
@@ -443,15 +437,15 @@ export default function BillingsPage() {
     }
 
     // All Systems Monthly
-    if (plan.productId === "prod_TZZcEMlv2cNNWl") {
-      if (currentProductId === "prod_TZZdcgHBZ13uZ9") {
+    if (plan.productId === PRODUCT_IDS.ALL_SYSTEMS_MONTHLY) {
+      if (currentProductId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY) {
         return "Downgrade";
       }
       return "Upgrade";
     }
 
     // All Systems Yearly
-    if (plan.productId === "prod_TZZdcgHBZ13uZ9") {
+    if (plan.productId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY) {
       return "Upgrade & Save";
     }
 
@@ -473,8 +467,8 @@ export default function BillingsPage() {
         });
         setSystemSelectionDialogOpen(true);
       } else if (plan.productId) {
-        // For "All Systems" plans, pass all three system slugs
-        const allSystemSlugs = "system-1,system-2,system-3";
+        // For "All Systems" plans, pass all system slugs
+        const allSystemSlugs = getAllSystemSlugsString();
         router.push(
           `/dashboard/subscribe?productId=${
             plan.productId
@@ -497,7 +491,7 @@ export default function BillingsPage() {
       setSystemSelectionDialogOpen(true);
     } else {
       // For upgrades or downgrades to All Systems, show confirmation directly
-      const allSystemSlugs = ["system-1", "system-2", "system-3"];
+      const allSystemSlugs = getAllSystemSlugsArray();
       setSelectedNewPlan({
         productId: plan.productId!,
         priceId: plan.priceId!,
