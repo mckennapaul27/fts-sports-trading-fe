@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { draftMode } from "next/headers";
+import { unstable_noStore } from "next/cache";
 import { getLegalPageBySlug, getLegalPages } from "@/lib/storyblok";
 import { StoryblokAsset, MetaDataComponent } from "@/lib/storyblok-types";
 import { renderStoryblokRichText } from "@/lib/storyblok-richtext";
@@ -115,6 +117,13 @@ export async function generateMetadata({
 }
 
 export default async function LegalPage({ params }: LegalPageProps) {
+  // Check if we're in preview mode - if so, opt out of static generation
+  // This ensures Storyblok can see live changes
+  const draft = await draftMode();
+  if ((draft as { isEnabled: boolean }).isEnabled) {
+    unstable_noStore();
+  }
+
   const { slug } = await params;
   const page = await getLegalPageBySlug(slug);
 

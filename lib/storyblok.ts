@@ -1,4 +1,5 @@
 import StoryblokClient from "storyblok-js-client";
+import { draftMode } from "next/headers";
 import { storyblokToken } from "../storyblok.config";
 import { BlogPost } from "./storyblok-types";
 
@@ -10,6 +11,23 @@ export const storyblokClient = new StoryblokClient({
     type: process.env.NODE_ENV === "development" ? "none" : "memory",
   },
 });
+
+// Helper function to get the Storyblok version (draft or published)
+// Checks draft mode first, then falls back to NODE_ENV for development
+export async function getStoryblokVersion(): Promise<"draft" | "published"> {
+  try {
+    const draft = await draftMode();
+    if ((draft as { isEnabled: boolean }).isEnabled) {
+      return "draft";
+    }
+  } catch {
+    // draftMode() can only be called in server components/route handlers
+    // If it fails, fall back to NODE_ENV check
+  }
+
+  // Fallback: use draft in development, published in production
+  return process.env.NODE_ENV === "development" ? "draft" : "published";
+}
 
 // Initialize Storyblok bridge for preview mode
 export function initStoryblok() {
@@ -32,7 +50,7 @@ export async function getBlogPosts(): Promise<BlogPost[]> {
   try {
     const { data } = await storyblokClient.get("cdn/stories", {
       starts_with: "blog/",
-      version: process.env.NODE_ENV === "development" ? "draft" : "published",
+      version: await getStoryblokVersion(),
       sort_by: "first_published_at:desc",
     });
 
@@ -49,7 +67,7 @@ export async function getBlogPostBySlug(
 ): Promise<BlogPost | null> {
   try {
     const { data } = await storyblokClient.get(`cdn/stories/blog/${slug}`, {
-      version: process.env.NODE_ENV === "development" ? "draft" : "published",
+      version: await getStoryblokVersion(),
     });
 
     return (data.story || null) as BlogPost | null;
@@ -64,7 +82,7 @@ export async function getEducationArticles(): Promise<BlogPost[]> {
   try {
     const { data } = await storyblokClient.get("cdn/stories", {
       starts_with: "education/",
-      version: process.env.NODE_ENV === "development" ? "draft" : "published",
+      version: await getStoryblokVersion(),
       sort_by: "first_published_at:desc",
     });
 
@@ -83,7 +101,7 @@ export async function getEducationArticleBySlug(
     const { data } = await storyblokClient.get(
       `cdn/stories/education/${slug}`,
       {
-        version: process.env.NODE_ENV === "development" ? "draft" : "published",
+        version: await getStoryblokVersion(),
       }
     );
 
@@ -99,7 +117,7 @@ export async function getLegalPages(): Promise<BlogPost[]> {
   try {
     const { data } = await storyblokClient.get("cdn/stories", {
       starts_with: "legal/",
-      version: process.env.NODE_ENV === "development" ? "draft" : "published",
+      version: await getStoryblokVersion(),
       sort_by: "first_published_at:desc",
     });
 
@@ -116,7 +134,7 @@ export async function getLegalPageBySlug(
 ): Promise<BlogPost | null> {
   try {
     const { data } = await storyblokClient.get(`cdn/stories/legal/${slug}`, {
-      version: process.env.NODE_ENV === "development" ? "draft" : "published",
+      version: await getStoryblokVersion(),
     });
 
     return (data.story || null) as BlogPost | null;
