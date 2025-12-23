@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { NextAuthProvider } from "@/app/providors";
 import { ClimbingBoxLoader } from "react-spinners";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
 
 const loginFormSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
@@ -221,12 +222,17 @@ function SignInForm() {
 
                 {/* Password Field */}
                 <div>
-                  <Label
-                    htmlFor="password"
-                    className="text-dark-navy mb-2 block"
-                  >
-                    Password
-                  </Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="password" className="text-dark-navy block">
+                      Password
+                    </Label>
+                    <Link
+                      href="/forgot-password"
+                      className="text-dark-navy/70 hover:text-dark-navy text-sm underline"
+                    >
+                      Forgot Password?
+                    </Link>
+                  </div>
                   <Input
                     id="password"
                     type="password"

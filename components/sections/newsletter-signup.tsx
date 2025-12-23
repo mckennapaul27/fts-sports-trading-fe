@@ -3,15 +3,52 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import toast from "react-hot-toast";
 
 export function NewsletterSignup() {
   const [email, setEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle newsletter subscription
-    console.log("Subscribing:", email);
-    // TODO: Implement actual subscription logic
+
+    if (!email.trim()) {
+      toast.error("Please enter your email address");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
+
+    try {
+      const response = await fetch(`${apiUrl}/api/users/newsletter-subscribe`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success(data.message || "Successfully subscribed to newsletter");
+        setEmail("");
+      } else {
+        // Handle error responses
+        const errorMessage =
+          data.message ||
+          "Failed to subscribe to newsletter. Please try again later.";
+        toast.error(errorMessage);
+      }
+    } catch (error) {
+      console.error("Newsletter subscription error:", error);
+      toast.error("Failed to subscribe to newsletter. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -36,14 +73,16 @@ export function NewsletterSignup() {
               placeholder="Enter your email"
               required
               className="flex-1"
+              disabled={isSubmitting}
             />
             <Button
               type="submit"
               variant="secondary"
               size="default"
               className="w-full sm:w-auto"
+              disabled={isSubmitting}
             >
-              Subscribe
+              {isSubmitting ? "Subscribing..." : "Subscribe"}
             </Button>
           </form>
         </div>
