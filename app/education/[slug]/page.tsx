@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowLeft } from "lucide-react";
+import { draftMode } from "next/headers";
+import { unstable_noStore } from "next/cache";
 import {
   getEducationArticleBySlug,
   getEducationArticles,
@@ -159,6 +161,13 @@ export async function generateMetadata({
 export default async function EducationArticlePage({
   params,
 }: EducationArticlePageProps) {
+  // Check if we're in preview mode - if so, opt out of static generation
+  // This ensures Storyblok can see live changes
+  const draft = await draftMode();
+  if ((draft as { isEnabled: boolean }).isEnabled) {
+    unstable_noStore();
+  }
+
   const { slug } = await params;
   const article = await getEducationArticleBySlug(slug);
 
