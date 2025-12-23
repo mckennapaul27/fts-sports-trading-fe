@@ -76,6 +76,8 @@ const columns: ColumnDef<BetResult>[] = [
           className={
             result === "LOST" || result === "PLACED"
               ? "text-green font-semibold"
+              : result === "NR" || result === "VOID" || result === "CANCELLED"
+              ? "text-yellow-600 font-semibold"
               : "text-red-600 font-semibold"
           }
         >

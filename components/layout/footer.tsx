@@ -122,10 +122,9 @@ const resources = [
 ];
 
 const legal = [
-  { label: "Terms of Use", href: "/terms" },
-  { label: "Privacy Policy", href: "/privacy" },
-  { label: "Cookies", href: "/cookies" },
-  { label: "Risk Disclaimer", href: "/risk-disclaimer" },
+  { label: "Terms of Use", href: "/legal/terms" },
+  { label: "Privacy Policy", href: "/legal/privacy" },
+  { label: "Risk Disclaimer", href: "/legal/risk-disclaimer" },
 ];
 
 export function Footer() {

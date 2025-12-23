@@ -93,3 +93,35 @@ export async function getEducationArticleBySlug(
     return null;
   }
 }
+
+// Fetch all legal pages
+export async function getLegalPages(): Promise<BlogPost[]> {
+  try {
+    const { data } = await storyblokClient.get("cdn/stories", {
+      starts_with: "legal/",
+      version: process.env.NODE_ENV === "development" ? "draft" : "published",
+      sort_by: "first_published_at:desc",
+    });
+
+    return (data.stories || []) as BlogPost[];
+  } catch (error) {
+    console.error("Error fetching legal pages:", error);
+    return [];
+  }
+}
+
+// Fetch a single legal page by slug
+export async function getLegalPageBySlug(
+  slug: string
+): Promise<BlogPost | null> {
+  try {
+    const { data } = await storyblokClient.get(`cdn/stories/legal/${slug}`, {
+      version: process.env.NODE_ENV === "development" ? "draft" : "published",
+    });
+
+    return (data.story || null) as BlogPost | null;
+  } catch (error) {
+    console.error(`Error fetching legal page with slug ${slug}:`, error);
+    return null;
+  }
+}

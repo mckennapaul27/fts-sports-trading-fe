@@ -215,6 +215,7 @@ export default function DashboardPage() {
             allResults.push(...systemResults);
           }
         });
+        // console.log("allResults", allResults);
 
         // Sort by date descending and get top 3 most recent
         const uniqueResults = Array.from(
@@ -362,10 +363,16 @@ export default function DashboardPage() {
                   <div className="flex items-center gap-4 flex-1">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        isWin ? "bg-green" : "bg-red-500"
+                        result.result === "LOST"
+                          ? "bg-green"
+                          : result.result === "NR" ||
+                            result.result === "VOID" ||
+                            result.result === "CANCELLED"
+                          ? "bg-yellow-500"
+                          : "bg-red-500"
                       }`}
                     >
-                      {isWin ? (
+                      {result.result === "LOST" ? (
                         <CheckCircle2 className="w-5 h-5 text-white" />
                       ) : (
                         <XCircle className="w-5 h-5 text-white" />
@@ -374,12 +381,18 @@ export default function DashboardPage() {
                     <div className="flex-1">
                       <h3 className="font-bold text-dark-navy font-heading">
                         {result.systemId?.name || "System"} - Selection{" "}
-                        {isWin ? "lost" : "won"}
+                        {result.result}
                       </h3>
                       <p className="text-sm text-dark-navy/70 mt-1">
                         {result.selection} at {result.course} (BSP{" "}
-                        {result.bsp.toFixed(2)}) - {result.pl >= 0 ? "+" : ""}
-                        {result.pl.toFixed(1)} pts
+                        {result.bsp.toFixed(2)}) {result.pl >= 0 ? "+" : ""}
+                        <span
+                          className={`${
+                            result.pl >= 0 ? "text-green" : "text-red-600"
+                          } font-semibold`}
+                        >
+                          {result.pl.toFixed(2)} pts
+                        </span>
                       </p>
                     </div>
                   </div>
