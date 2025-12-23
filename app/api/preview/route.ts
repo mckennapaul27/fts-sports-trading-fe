@@ -1,6 +1,8 @@
 import { draftMode } from "next/headers";
 import { redirect } from "next/navigation";
 
+// In dev mode we we use https://localhost:3010/
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const secret = searchParams.get("secret");
