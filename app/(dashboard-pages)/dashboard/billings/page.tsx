@@ -642,11 +642,11 @@ export default function BillingsPage() {
           <h2 className="text-xl font-bold text-dark-navy mb-4">
             Current Plan
           </h2>
-          <div className="border-2 border-gold rounded-lg p-6 bg-white">
-            <div className="flex items-start justify-between mb-4">
+          <div className="sm:border-2 sm:border-gold rounded-lg sm:p-6 bg-white">
+            <div className="flex flex-col md:flex-row items-start justify-between mb-4">
               <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-xl font-bold text-dark-navy">
+                <div className="flex flex-col md:flex-row items-start gap-3 mb-2">
+                  <h3 className="text-base sm:text-xl font-bold text-dark-navy border-2 border-gold rounded-lg px-2 py-1 sm:border-none sm:px-0 sm:py-0">
                     {currentPlan.name}
                   </h3>
                   {currentPlan.cancelAtPeriodEnd ? (
@@ -687,11 +687,11 @@ export default function BillingsPage() {
                 </p>
               </div>
               {/* Action Buttons - Top Right */}
-              <div className="flex flex-col gap-2 ml-4 items-center">
+              <div className="flex flex-col gap-2 md:ml-4 mt-4 md:mt-0 items-center">
                 {currentPlan.cancelAtPeriodEnd ? (
                   <Button
                     variant="outline"
-                    size="lg"
+                    size="sm"
                     className="whitespace-nowrap"
                     onClick={handleResumeSubscription}
                     disabled={isCanceling}
@@ -702,7 +702,7 @@ export default function BillingsPage() {
                   <>
                     <Button
                       variant="outline"
-                      size="lg"
+                      size="sm"
                       className="whitespace-nowrap"
                       onClick={() => setCancelDialogOpen(true)}
                     >
@@ -797,7 +797,7 @@ export default function BillingsPage() {
         <h2 className="text-xl font-bold text-dark-navy mb-6">
           Available Plans
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {planDefinitions.map((plan, index) => {
             const isCurrent = isCurrentPlan(plan);
             return (
@@ -871,8 +871,8 @@ export default function BillingsPage() {
             Payment Method
           </h2>
           {billingData.paymentMethod ? (
-            <div className="bg-cream rounded-lg p-6 border border-gray-200 flex items-center justify-between">
-              <div className="flex items-center gap-4">
+            <div className="bg-cream rounded-lg p-6 border border-gray-200 flex flex-col md:flex-row gap-6 items-start justify-between">
+              <div className="flex flex-col sm:flex-row items-start gap-4">
                 <div className="w-12 h-12 rounded-lg bg-blue-500/10 flex items-center justify-center">
                   <CreditCard className="w-6 h-6 text-blue-500" />
                 </div>

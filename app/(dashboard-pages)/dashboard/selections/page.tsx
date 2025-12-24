@@ -428,28 +428,29 @@ export default function SelectionsPage() {
         <Tabs
           value={activeTab}
           onValueChange={(v) => setActiveTab(v as "today" | "results")}
-          className="w-full"
+          className="w-auto"
         >
-          <div className="flex items-center justify-between mb-6">
-            <TabsList className="bg-cream/50 border border-gray-200">
-              <TabsTrigger
-                value="today"
-                className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
-              >
-                Today&apos;s Selections
-              </TabsTrigger>
-              <TabsTrigger
-                value="results"
-                className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
-              >
-                Recent Results
-              </TabsTrigger>
-            </TabsList>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-between mb-6">
+            <div className="flex-shrink-0">
+              <TabsList className="bg-cream/50 border border-gray-200 justify-start">
+                <TabsTrigger
+                  value="today"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
+                >
+                  Today&apos;s Selections
+                </TabsTrigger>
+                <TabsTrigger
+                  value="results"
+                  className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
+                >
+                  Recent Results
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* System Filter - Only show for Today's Selections */}
             {activeTab === "today" && hasSubscriptions === true && (
               <div className="flex items-center gap-2">
-                <Filter className="w-4 h-4 text-gray-500" />
                 <select
                   value={selectedSystemId}
                   onChange={(e) => setSelectedSystemId(e.target.value)}

@@ -21,7 +21,7 @@ const supportInfo = [
   {
     icon: Mail,
     title: "Email",
-    description: "support@fortissportstrading.com",
+    description: "info@fortissportstrading.com",
   },
   {
     icon: MessageSquare,
@@ -57,7 +57,7 @@ export default function ContactPage() {
       <section className="bg-cream py-16 sm:py-20 lg:py-24">
         <div className="container mx-auto px-6 sm:px-8 xl:px-12">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {supportInfo.map((info, index) => {
                 const IconComponent = info.icon;
                 return (

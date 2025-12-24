@@ -156,7 +156,7 @@ export function Membership({}: MembershipProps) {
             </div>
 
             {/* Pricing Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 sm:gap-8">
               {plans.map((plan, index) => (
                 <div
                   key={index}

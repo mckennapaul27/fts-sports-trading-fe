@@ -40,7 +40,7 @@ export function CTATransparency({
 
             {/* Right Side - Card */}
             <div className="bg-white border border-gray-200 rounded-lg p-6 sm:p-8">
-              <div className="flex items-start gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row items-start gap-4 mb-4">
                 <div className="flex-shrink-0">
                   <Icon
                     className={`w-8 h-8 ${iconClassName}`}

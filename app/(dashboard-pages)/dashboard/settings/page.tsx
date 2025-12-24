@@ -438,11 +438,11 @@ export default function SettingsPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4 pt-4">
+              <div className="flex flex-col md:flex-row gap-4 pt-4">
                 <Button
                   type="submit"
                   variant="secondary"
-                  className="bg-gold text-dark-navy hover:bg-gold/90"
+                  className="bg-gold text-dark-navy hover:bg-gold/90 w-full md:w-auto"
                   disabled={isSavingProfile || isSavingPassword}
                 >
                   {isSavingProfile || isSavingPassword
@@ -452,6 +452,7 @@ export default function SettingsPage() {
                 <Button
                   type="button"
                   variant="outline"
+                  className="w-full md:w-auto"
                   onClick={handleCancel}
                   disabled={isSavingProfile || isSavingPassword}
                 >

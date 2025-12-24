@@ -1040,7 +1040,7 @@ export default function AdminSelectionsPage() {
 
         {/* Manage Selections Tab */}
         <TabsContent value="selections" className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
               <h2 className="text-2xl font-semibold text-dark-navy">
                 Manage Selections
@@ -1150,7 +1150,7 @@ export default function AdminSelectionsPage() {
                       )}
                     </div>
                   </div>
-                  <DialogFooter>
+                  <DialogFooter className="gap-4">
                     <Button
                       type="button"
                       variant="outline"
@@ -1201,23 +1201,25 @@ export default function AdminSelectionsPage() {
                 onValueChange={setActiveSystemTab}
                 className="w-full"
               >
-                <TabsList className="bg-cream/50 border border-gray-200 mb-4">
-                  {systems.map((system) => (
-                    <TabsTrigger
-                      key={system._id}
-                      value={system._id}
-                      className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
-                    >
-                      {system.name}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
+                <div className="overflow-x-auto -mx-6 sm:mx-0 px-6 sm:px-0 scrollbar-hide mb-4">
+                  <TabsList className="bg-cream/50 border border-gray-200 inline-flex flex-nowrap w-auto min-w-full sm:min-w-0 sm:justify-center justify-start">
+                    {systems.map((system) => (
+                      <TabsTrigger
+                        key={system._id}
+                        value={system._id}
+                        className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer whitespace-nowrap flex-shrink-0"
+                      >
+                        {system.name}
+                      </TabsTrigger>
+                    ))}
+                  </TabsList>
+                </div>
 
                 {systems.map((system) => (
                   <TabsContent key={system._id} value={system._id}>
                     <div className="space-y-4">
                       {/* Date Picker */}
-                      <div className="flex items-center gap-4 pb-4 border-b border-gray-200">
+                      <div className="flex flex-col md:flex-row md:items-center gap-4 pb-4 border-b border-gray-200">
                         <div className="flex-1">
                           <Label htmlFor={`date-${system._id}`}>Date *</Label>
                           <Input
@@ -1233,7 +1235,7 @@ export default function AdminSelectionsPage() {
                             className="mt-1"
                           />
                         </div>
-                        <div className="flex items-end gap-2">
+                        <div className="flex flex-col md:flex-row md:items-end gap-2">
                           <div className="relative">
                             <Input
                               type="file"
@@ -1255,7 +1257,7 @@ export default function AdminSelectionsPage() {
                               disabled={
                                 isCsvUploading || !bulkEntryDates[system._id]
                               }
-                              className="mt-6"
+                              className="mt-6 w-full md:w-auto"
                             >
                               {isCsvUploading ? (
                                 <>
@@ -1273,7 +1275,7 @@ export default function AdminSelectionsPage() {
                           <Button
                             variant="outline"
                             onClick={() => addBulkRow(system._id)}
-                            className="mt-6"
+                            className=""
                           >
                             <Plus className="w-4 h-4 mr-2" />
                             Add Row

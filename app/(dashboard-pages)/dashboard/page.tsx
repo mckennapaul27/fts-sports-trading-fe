@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   XCircle,
   ArrowRight,
+  Award,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -269,7 +270,7 @@ export default function DashboardPage() {
     <div className="max-w-7xl mx-auto space-y-8">
       {/* Welcome Banner */}
       <div className="bg-cream rounded-lg flex items-center justify-between p-8">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col md:flex-row items-start gap-4">
           <div className="w-16 h-16 rounded-full bg-gold flex items-center justify-center">
             <User className="w-8 h-8 text-dark-navy" />
           </div>
@@ -282,11 +283,16 @@ export default function DashboardPage() {
             </p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="text-right hidden sm:block border-2 border-gold rounded-lg p-2">
           {billingLoading ? (
             <p className="text-dark-navy/70">Loading...</p>
           ) : (
-            <p className="text-dark-navy font-medium">{getPlanDisplayName()}</p>
+            <div className="flex items-center gap-2">
+              <Award className="w-6 h-6 text-gold" />
+              <p className="text-dark-navy font-medium">
+                {getPlanDisplayName()}
+              </p>
+            </div>
           )}
         </div>
       </div>
@@ -362,7 +368,7 @@ export default function DashboardPage() {
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 hidden sm:flex ${
                         result.result === "LOST"
                           ? "bg-green"
                           : result.result === "NR" ||
@@ -380,7 +386,8 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex-1">
                       <h3 className="font-bold text-dark-navy font-heading">
-                        {result.systemId?.name || "System"} - Selection{" "}
+                        {result.systemId?.name || "System"} -{" "}
+                        <span className="hidden sm:inline">Selection </span>{" "}
                         {result.result}
                       </h3>
                       <p className="text-sm text-dark-navy/70 mt-1">
@@ -394,9 +401,12 @@ export default function DashboardPage() {
                           {result.pl.toFixed(2)} pts
                         </span>
                       </p>
+                      <div className="text-sm text-dark-navy/60 mt-2  block sm:hidden">
+                        {formatRelativeTime(result.date)}
+                      </div>
                     </div>
                   </div>
-                  <div className="text-sm text-dark-navy/60 flex-shrink-0 ml-4">
+                  <div className="text-sm text-dark-navy/60 flex-shrink-0 ml-4 hidden sm:block">
                     {formatRelativeTime(result.date)}
                   </div>
                 </div>
@@ -425,7 +435,7 @@ export default function DashboardPage() {
             </Button>
           </div>
         ) : (
-          <div className="bg-white rounded-lg p-6 shadow-sm flex items-center justify-between">
+          <div className="bg-white rounded-lg p-6 shadow-sm flex flex-col gap-4 sm:flex-row md:items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-dark-navy font-heading mb-1">
                 {currentPlan.name}

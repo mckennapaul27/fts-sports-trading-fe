@@ -425,17 +425,19 @@ export default function ResultsPage() {
               onValueChange={setSelectedSystemId}
               className="w-full"
             >
-              <TabsList className="bg-cream/50 border border-gray-200">
-                {systems.map((system) => (
-                  <TabsTrigger
-                    key={system._id}
-                    value={system._id}
-                    className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer"
-                  >
-                    {system.name}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <div className="overflow-x-auto -mx-6 sm:mx-0 px-6 sm:px-0 scrollbar-hide">
+                <TabsList className="bg-cream/50 border border-gray-200 inline-flex flex-nowrap w-auto min-w-full sm:min-w-0 sm:justify-center justify-start">
+                  {systems.map((system) => (
+                    <TabsTrigger
+                      key={system._id}
+                      value={system._id}
+                      className="data-[state=active]:bg-gold data-[state=active]:text-dark-navy cursor-pointer whitespace-nowrap flex-shrink-0"
+                    >
+                      {system.name}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
             </Tabs>
           </div>
         )}
@@ -595,6 +597,7 @@ export default function ResultsPage() {
             viewMode={viewMode}
             onViewModeChange={setViewMode}
             showOddsRange={true}
+            className="bg-gray-50"
           />
 
           {/* Applied filters summary */}

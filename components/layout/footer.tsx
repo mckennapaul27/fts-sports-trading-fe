@@ -112,6 +112,7 @@ const quickLinks = [
   { label: "Results", href: "/results" },
   { label: "Methodology", href: "/methodology" },
   { label: "Membership", href: "/membership" },
+  { label: "Systems", href: "/systems" },
   { label: "About", href: "/about" },
 ];
 

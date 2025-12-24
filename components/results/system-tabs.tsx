@@ -62,17 +62,19 @@ export function SystemTabs({
           onValueChange={onSystemChange}
           className="mx-auto max-w-7xl"
         >
-          <TabsList className="">
-            {systems.map((system) => (
-              <TabsTrigger
-                key={system._id}
-                value={system._id}
-                className="data-[state=active]:bg-white data-[state=active]:text-dark-navy text-gray-600 cursor-pointer"
-              >
-                {system.name}
-              </TabsTrigger>
-            ))}
-          </TabsList>
+          <div className="overflow-x-auto -mx-6 sm:mx-0 px-6 sm:px-0 scrollbar-hide">
+            <TabsList className="inline-flex flex-nowrap w-auto min-w-full sm:min-w-0 sm:justify-center justify-start">
+              {systems.map((system) => (
+                <TabsTrigger
+                  key={system._id}
+                  value={system._id}
+                  className="data-[state=active]:bg-white data-[state=active]:text-dark-navy text-gray-600 cursor-pointer whitespace-nowrap flex-shrink-0"
+                >
+                  {system.name}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
         </Tabs>
       </div>
     </div>

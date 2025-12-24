@@ -102,13 +102,13 @@ export default function AboutPage() {
       <section className="bg-white py-12 sm:py-16">
         <div className="container mx-auto px-6 sm:px-8 xl:px-12">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {statistics.map((stat, index) => (
                 <div
                   key={index}
                   className="bg-white rounded-lg p-6 text-center shadow-sm"
                 >
-                  <div className="text-3xl sm:text-4xl font-bold text-dark-navy mb-2">
+                  <div className="text-2xl sm:text-3xl xl:text-4xl font-bold text-dark-navy mb-2">
                     {stat.value}
                   </div>
                   <div className="text-sm text-gray-600">{stat.label}</div>
@@ -135,7 +135,7 @@ export default function AboutPage() {
                     key={index}
                     className="bg-white rounded-lg p-6 sm:p-8 shadow-sm"
                   >
-                    <div className="flex items-start gap-4">
+                    <div className="flex flex-col sm:flex-row items-start gap-4">
                       <div className="flex-shrink-0">
                         <div className="w-16 h-16 rounded-full bg-teal/10 flex items-center justify-center">
                           <IconComponent className="w-8 h-8 text-teal" />

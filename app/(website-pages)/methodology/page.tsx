@@ -106,25 +106,23 @@ export default function MethodologyPage() {
                 <li className="flex items-start gap-3">
                   <Check className="w-5 h-5 text-green flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700">
-                    Each system operates with its own:
-                  </span>
-                </li>
-                <li className="flex items-start gap-3 ml-8">
-                  <span className="text-gray-700">
                     Selection criteria and filters
                   </span>
                 </li>
-                <li className="flex items-start gap-3 ml-8">
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-green flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700">
                     Staking plan and liability limits
                   </span>
                 </li>
-                <li className="flex items-start gap-3 ml-8">
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-green flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700">
                     Performance tracking and reporting
                   </span>
                 </li>
-                <li className="flex items-start gap-3 ml-8">
+                <li className="flex items-start gap-3">
+                  <Check className="w-5 h-5 text-green flex-shrink-0 mt-0.5" />
                   <span className="text-gray-700">
                     Risk management parameters
                   </span>
@@ -160,7 +158,7 @@ export default function MethodologyPage() {
           <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* High Strike Rate Card */}
             <div className="bg-green-50 rounded-lg p-6 border-2 border-green-200">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex md:flex-col lg:flex-row md:items-start lg:items-center gap-3 mb-3">
                 <Check className="w-6 h-6 text-green" />
                 <h3 className="text-lg font-bold text-dark-navy">
                   High Strike Rate
@@ -173,7 +171,7 @@ export default function MethodologyPage() {
 
             {/* Controlled Liability Card */}
             <div className="bg-green-50 rounded-lg p-6 border-2 border-green-200">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex md:flex-col lg:flex-row md:items-start lg:items-center gap-3 mb-3">
                 <Check className="w-6 h-6 text-green" />
                 <h3 className="text-lg font-bold text-dark-navy">
                   Controlled Liability
@@ -186,7 +184,7 @@ export default function MethodologyPage() {
 
             {/* Edge Over Time Card */}
             <div className="bg-green-50 rounded-lg p-6 border-2 border-green-200">
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex md:flex-col lg:flex-row md:items-start lg:items-center gap-3 mb-3">
                 <Check className="w-6 h-6 text-green" />
                 <h3 className="text-lg font-bold text-dark-navy">
                   Edge Over Time
