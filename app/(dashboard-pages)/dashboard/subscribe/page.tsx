@@ -9,6 +9,10 @@ import { Button } from "@/components/ui/button";
 import { SystemSelectionDialog } from "@/components/sections/system-selection-dialog";
 import { useSession } from "next-auth/react";
 import { getProductIdToSystemName } from "@/config/stripe-products";
+import {
+  DuplicateSubscriptionCheck,
+  useIsDuplicateSubscription,
+} from "@/components/subscription/duplicate-subscription-check";
 
 // Map product IDs to system names
 const productIdToSystemName = getProductIdToSystemName();
@@ -22,6 +26,9 @@ export default function SubscribePage() {
   const productId = searchParams.get("productId");
   const planName = searchParams.get("planName") || "Single System";
   const systemSlugsParam = searchParams.get("systemSlugs");
+
+  // Check if user is already subscribed to this plan
+  const isDuplicate = useIsDuplicateSubscription(productId);
 
   // Parse system slugs from query param (comma-separated or single value)
   const systemSlugs = systemSlugsParam
@@ -39,6 +46,16 @@ export default function SubscribePage() {
   const handleSubscribe = async () => {
     if (!productId || systemSlugs.length === 0 || !session?.accessToken) {
       toast.error("No plan selected. Please go back and select a plan.");
+      return;
+    }
+
+    // Prevent subscribing to the same plan
+    if (isDuplicate) {
+      toast.error(
+        "You are already subscribed to this plan. Please visit your billing page to manage your subscription.",
+        { duration: 5000 }
+      );
+      router.push("/dashboard/billings");
       return;
     }
 
@@ -103,6 +120,12 @@ export default function SubscribePage() {
 
   return (
     <>
+      {/* Check for duplicate subscription */}
+      <DuplicateSubscriptionCheck
+        productId={productId}
+        showToast={true}
+        redirectToBilling={true}
+      />
       {/* <Header
         title="Complete Your Subscription"
         description="Review your selected plan and proceed to payment."
@@ -135,7 +158,7 @@ export default function SubscribePage() {
                   size="lg"
                   className="w-full"
                   onClick={handleSubscribe}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isDuplicate}
                 >
                   {isSubmitting ? "Processing..." : "Proceed to Payment"}
                 </Button>

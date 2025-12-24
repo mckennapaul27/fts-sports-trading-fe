@@ -12,7 +12,8 @@ export function ConditionalNavbarFooter({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isDashboardPage = pathname?.startsWith("/dashboard");
+  const isDashboardPage =
+    pathname?.startsWith("/dashboard") || pathname?.startsWith("/admin");
 
   return (
     <>

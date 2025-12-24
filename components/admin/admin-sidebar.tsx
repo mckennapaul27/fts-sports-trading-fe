@@ -5,8 +5,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { Slant as Hamburger } from "hamburger-react";
-import { LayoutDashboard, List, LogOut } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+  // LayoutDashboard,
+  List,
+  LogOut,
+} from "lucide-react";
+// import { cn } from "@/lib/utils";
 import Image from "next/image";
 
 const menuItems = [
@@ -55,7 +59,7 @@ export function AdminSidebar() {
               </h2>
             </div>
             <nav className="p-4 space-y-2 flex flex-col h-full">
-              <div className="flex-1 space-y-2">
+              {/* <div className="flex-1 space-y-2">
                 {menuItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
@@ -76,7 +80,7 @@ export function AdminSidebar() {
                     </Link>
                   );
                 })}
-              </div>
+              </div> */}
               <button
                 onClick={() => {
                   handleLogout();
@@ -104,12 +108,12 @@ export function AdminSidebar() {
                 width={180}
                 height={37}
                 priority
-                className="hidden xl:block"
+                className=""
               />
             </Link>
 
             {/* Navigation Tabs */}
-            <nav className="flex-1 flex items-center justify-center">
+            {/* <nav className="flex-1 flex items-center justify-center">
               <div className="inline-flex h-10 items-center justify-center rounded-md bg-dark-navy/50 p-1 border border-gold/20">
                 {menuItems.map((item) => {
                   const Icon = item.icon;
@@ -131,7 +135,7 @@ export function AdminSidebar() {
                   );
                 })}
               </div>
-            </nav>
+            </nav> */}
 
             {/* Logout Button */}
             <div className="flex items-center">
