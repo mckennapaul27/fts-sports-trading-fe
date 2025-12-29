@@ -155,7 +155,11 @@ function RegisterAndSubscribeContent() {
                 <h2 className="text-xl font-bold text-dark-navy mb-4">
                   Your Selected Plan
                 </h2>
-                <PlanDisplay planName={planName} systemName={systemName} />
+                <PlanDisplay
+                  planName={planName}
+                  systemName={systemName}
+                  productId={productId || undefined}
+                />
               </div>
 
               {/* Registration Form */}

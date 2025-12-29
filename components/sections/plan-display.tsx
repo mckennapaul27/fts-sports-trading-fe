@@ -1,4 +1,5 @@
 import { PRODUCT_IDS } from "@/config/stripe-products";
+import { getFormattedPrice } from "@/lib/promotion-utils";
 
 function CheckmarkIcon() {
   return (
@@ -56,17 +57,17 @@ const planFeatures: Record<string, string[]> = {
   ],
 };
 
-const planPrices: Record<string, { price: string; period: string }> = {
+const planPrices: Record<string, { price: number; period: string }> = {
   "Single System": {
-    price: "£10",
+    price: 10,
     period: "/month",
   },
   "All Systems - Monthly": {
-    price: "£30",
+    price: 30,
     period: "/month",
   },
   "All Systems - Yearly": {
-    price: "£240",
+    price: 240,
     period: "/year",
   },
 };
@@ -96,7 +97,10 @@ export function PlanDisplay({
   }
 
   const features = planFeatures[planKey] || planFeatures["Single System"];
-  const { price, period } = planPrices[planKey] || planPrices["Single System"];
+  const { price: originalPrice, period } = planPrices[planKey] || planPrices["Single System"];
+  
+  // Get promotional pricing if available
+  const priceInfo = getFormattedPrice(productId, originalPrice, period);
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
@@ -116,9 +120,32 @@ export function PlanDisplay({
       </div>
 
       <div className="mb-6 pb-6 border-b border-gray-200">
+        {priceInfo.isPromotional && priceInfo.discountBadge && (
+          <div className="mb-2">
+            <span className="inline-block bg-gold text-white px-3 py-1 rounded-sm text-sm font-bold">
+              {priceInfo.discountBadge}
+            </span>
+          </div>
+        )}
         <div className="flex items-baseline gap-2">
-          <span className="text-4xl font-bold text-dark-navy">{price}</span>
-          <span className="text-lg text-gray-600">{period}</span>
+          {priceInfo.isPromotional ? (
+            <>
+              <span className="text-4xl font-bold text-dark-navy">
+                {priceInfo.displayPrice}
+              </span>
+              <span className="text-lg text-gray-600">{period}</span>
+              <span className="text-lg text-gray-400 line-through ml-2">
+                {priceInfo.originalPrice}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-4xl font-bold text-dark-navy">
+                {priceInfo.displayPrice}
+              </span>
+              <span className="text-lg text-gray-600">{period}</span>
+            </>
+          )}
         </div>
       </div>
 

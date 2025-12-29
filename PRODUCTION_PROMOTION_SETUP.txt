@@ -1,0 +1,73 @@
+PRODUCTION PROMOTION SETUP - JANUARY 2026
+==========================================
+
+To activate the 50% off promotion for All Systems Yearly in production:
+
+1. CREATE COUPON IN LIVE STRIPE ACCOUNT
+   -------------------------------------
+   - Go to Stripe Dashboard → Product catalogue → Coupons
+   - Click "Create coupon"
+   - Configure:
+     * Name: "All Systems - Yearly (50% off)"
+     * Percentage: 50%
+     * Duration: Once (applies to first payment only)
+     * Expires: January 31, 2026
+     * Applies to: All Systems product (prod_TePQBlRJx6Yfol)
+   - Save and note the Coupon ID (e.g., "3PTHivK6")
+   
+   - Create Promotion Code:
+     * Code: "JAN50" (optional, for manual entry if needed)
+     * Link it to the coupon you just created
+     * Note the Promotion Code API ID
+
+2. SET ENVIRONMENT VARIABLES
+   --------------------------
+   Add to your production environment:
+   
+   STRIPE_PROMOTION_COUPON_ID=your_live_coupon_id
+   STRIPE_PROMOTION_CODE_ID=your_live_promo_code_id (optional)
+
+3. UPDATE DATES IN CODE
+   ---------------------
+   
+   A. Backend (userController.js):
+      Find getPromotionCouponId() function and update:
+      
+      FROM:
+      const promotionStart = new Date("2025-01-01T00:00:00Z");
+      const promotionEnd = new Date("2026-12-31T23:59:59Z");
+      
+      TO:
+      const promotionStart = new Date("2026-01-01T00:00:00Z");
+      const promotionEnd = new Date("2026-01-31T23:59:59Z");
+   
+   B. Frontend (config/promotions.ts):
+      Find PROMOTIONS array and update:
+      
+      FROM:
+      startDate: "2025-01-01T00:00:00Z",
+      endDate: "2026-12-31T23:59:59Z",
+      
+      TO:
+      startDate: "2026-01-01T00:00:00Z",
+      endDate: "2026-01-31T23:59:59Z",
+
+4. TEST IN PRODUCTION
+   -------------------
+   - Verify frontend shows promotional pricing (£120 instead of £240)
+   - Test checkout flow to ensure coupon is applied
+   - Check Stripe Dashboard to confirm discount is working
+   - Verify the discount appears correctly in Stripe Checkout
+
+5. MONITOR
+   --------
+   - Check Stripe Dashboard for coupon redemptions
+   - Monitor revenue impact
+   - Ensure promotion expires correctly on January 31, 2026
+
+NOTES:
+- The promotion automatically applies - users don't need to enter a code
+- Frontend will hide promotional pricing if coupon ID is not configured
+- Test mode uses coupon ID: 3PTHivK6
+- Production uses the coupon ID from STRIPE_PROMOTION_COUPON_ID env var
+

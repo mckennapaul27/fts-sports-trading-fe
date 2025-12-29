@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { SystemSelectionDialog } from "../system-selection-dialog";
 import { PRODUCT_IDS, getAllSystemSlugsString } from "@/config/stripe-products";
+import { getFormattedPrice } from "@/lib/promotion-utils";
 
 function CheckmarkIcon() {
   return (
@@ -185,14 +186,66 @@ export function Membership({}: MembershipProps) {
                       plan.priceBgColor || ""
                     } -mx-6 sm:-mx-8 px-6 sm:px-8 py-4`}
                   >
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl sm:text-5xl font-bold text-dark-navy">
-                        {plan.price}
-                      </span>
-                      <span className="text-lg text-gray-600">
-                        {plan.period}
-                      </span>
-                    </div>
+                    {(() => {
+                      // Extract numeric price from string (e.g., "£240" -> 240)
+                      const numericPrice = parseInt(
+                        plan.price.replace(/[£,]/g, "")
+                      );
+
+                      // Diagnostic logging
+                      if (process.env.NODE_ENV !== "production") {
+                        console.log("[PROMOTION DEBUG] Membership component:", {
+                          planTitle: plan.title,
+                          planName: plan.planName,
+                          productId: plan.productId,
+                          numericPrice,
+                          period: plan.period,
+                        });
+                      }
+
+                      const priceInfo = getFormattedPrice(
+                        plan.productId,
+                        numericPrice,
+                        plan.period
+                      );
+
+                      return (
+                        <>
+                          {priceInfo.isPromotional &&
+                            priceInfo.discountBadge && (
+                              <div className="mb-2">
+                                <span className="inline-block bg-gold text-white px-3 py-1 rounded-sm text-sm font-bold">
+                                  {priceInfo.discountBadge}
+                                </span>
+                              </div>
+                            )}
+                          <div className="flex items-baseline gap-2 flex-wrap">
+                            {priceInfo.isPromotional ? (
+                              <>
+                                <span className="text-4xl sm:text-5xl font-bold text-dark-navy">
+                                  {priceInfo.displayPrice}
+                                </span>
+                                <span className="text-lg text-gray-600">
+                                  {plan.period}
+                                </span>
+                                <span className="text-lg text-gray-400 line-through">
+                                  {priceInfo.originalPrice}
+                                </span>
+                              </>
+                            ) : (
+                              <>
+                                <span className="text-4xl sm:text-5xl font-bold text-dark-navy">
+                                  {plan.price}
+                                </span>
+                                <span className="text-lg text-gray-600">
+                                  {plan.period}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                        </>
+                      );
+                    })()}
                   </div>
 
                   {/* Features */}
