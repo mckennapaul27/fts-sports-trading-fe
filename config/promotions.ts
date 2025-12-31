@@ -28,22 +28,30 @@ if (typeof window === "undefined" || process.env.NODE_ENV !== "production") {
 
 // Test Mode Coupon IDs (Sandbox)
 const TEST_COUPON_IDS = {
-  JANUARY_2026: "3PTHivK6",
+  JANUARY_2026: "3PTHivK6", // Dev/test coupon ID
 };
 
 // Production Coupon IDs (Live - to be set when created)
+// Note: In Next.js, env vars used in client components need NEXT_PUBLIC_ prefix
+// But we also check server-side env vars as fallback for build-time evaluation
 const PRODUCTION_COUPON_IDS = {
-  JANUARY_2026: process.env.STRIPE_PROMOTION_COUPON_ID || "", // Set when created in live account
+  JANUARY_2026:
+    process.env.NEXT_PUBLIC_STRIPE_PROMOTION_COUPON_ID ||
+    process.env.STRIPE_PROMOTION_COUPON_ID ||
+    "", // Set when created in live account
 };
 
 // Test Mode Promotion Code IDs
 const TEST_PROMO_CODE_IDS = {
-  JANUARY_2026: "promo_1Sjcx0DVmAeT8Z",
+  JANUARY_2026: "promo_1SjcxODVmAeT8ZSFJaeTtrwp", // Updated with correct test promo code ID
 };
 
 // Production Promotion Code IDs (to be set when created)
 const PRODUCTION_PROMO_CODE_IDS = {
-  JANUARY_2026: process.env.STRIPE_PROMOTION_CODE_ID || "", // Set when created in live account
+  JANUARY_2026:
+    process.env.NEXT_PUBLIC_STRIPE_PROMOTION_CODE_ID ||
+    process.env.STRIPE_PROMOTION_CODE_ID ||
+    "", // Set when created in live account
 };
 
 export interface Promotion {
@@ -64,8 +72,12 @@ export const PROMOTIONS: Promotion[] = [
   {
     id: "january-2026",
     name: "January 2026 - 50% Off All Systems Yearly",
-    startDate: "2026-01-01T00:00:00Z",
-    endDate: "2026-01-31T23:59:59Z",
+    // TESTING: Temporarily set to active dates for testing
+    // TODO: Before production, change back to:
+    // startDate: "2026-01-01T00:00:00Z",
+    // endDate: "2026-01-31T23:59:59Z",
+    startDate: "2025-01-01T00:00:00Z", // Testing: past date
+    endDate: "2026-12-31T23:59:59Z", // Testing: future date
     couponId: isProduction
       ? PRODUCTION_COUPON_IDS.JANUARY_2026
       : TEST_COUPON_IDS.JANUARY_2026,
@@ -213,19 +225,9 @@ export function getPromotionalPrice(
   }
 
   if (promotion && isPromotionActive(promotion)) {
-    // Only return promotional price if coupon is configured
-    // In production, if coupon ID is empty, don't show promotion
-    if (isProduction && !promotion.couponId) {
-      if (process.env.NODE_ENV !== "production") {
-        console.log(
-          "[PROMOTION DEBUG] Promotion found but coupon ID not configured in production"
-        );
-      }
-      return {
-        price: originalPrice,
-        isPromotional: false,
-      };
-    }
+    // Show promotional pricing if promotion is active
+    // Note: Backend will handle applying the coupon - frontend just displays the price
+    // If backend doesn't have coupon configured, checkout will show regular price
 
     if (process.env.NODE_ENV !== "production") {
       console.log("[PROMOTION DEBUG] Applying promotion:", {

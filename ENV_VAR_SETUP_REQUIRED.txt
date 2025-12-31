@@ -1,0 +1,79 @@
+ENVIRONMENT VARIABLES SETUP - REQUIRED FIXES
+============================================
+
+ISSUE FOUND:
+------------
+The frontend code needs environment variables with NEXT_PUBLIC_ prefix to be 
+accessible in client-side components (browser).
+
+CURRENT STATUS:
+--------------
+✅ Backend (Heroku): Environment variables are set correctly
+❌ Frontend (Vercel): Need to add NEXT_PUBLIC_ prefix
+
+REQUIRED ACTIONS:
+-----------------
+
+1. ADD ENVIRONMENT VARIABLES TO VERCEL (Frontend)
+   -------------------------------------------------
+   Go to Vercel Dashboard → Your Project → Settings → Environment Variables
+   
+   Add these variables (with NEXT_PUBLIC_ prefix):
+   
+   NEXT_PUBLIC_STRIPE_PROMOTION_COUPON_ID=3PTHivK6
+   (for dev/test mode)
+   
+   NEXT_PUBLIC_STRIPE_PROMOTION_COUPON_ID=9ymsNuPO
+   (for production)
+   
+   Optional (not required but can add):
+   NEXT_PUBLIC_STRIPE_PROMOTION_CODE_ID=promo_1SjcxODVmAeT8ZSFJaeTtrwp
+   (for dev/test mode)
+   
+   NEXT_PUBLIC_STRIPE_PROMOTION_CODE_ID=promo_1SkMQwGUcz2TV8H1FVP0y3kS
+   (for production)
+
+2. REBUILD/DEPLOY FRONTEND
+   -------------------------
+   After adding the env vars, trigger a new deployment in Vercel.
+   The env vars are embedded at build time, so a rebuild is required.
+
+3. TESTING DATES (CURRENTLY ACTIVE)
+   ----------------------------------
+   The promotion dates are currently set to be active for testing:
+   - Start: 2025-01-01 (past date)
+   - End: 2026-12-31 (future date)
+   
+   This allows you to test the promotion right now.
+   
+   ⚠️ BEFORE PRODUCTION: Change dates back to:
+   - Start: 2026-01-01T00:00:00Z
+   - End: 2026-01-31T23:59:59Z
+   
+   (See config/promotions.ts line 75-76)
+
+4. VERIFY IT WORKS
+   ----------------
+   After deploying with the env vars:
+   - Check browser console for promotion debug logs
+   - Verify promotional pricing shows (£120 instead of £240)
+   - Test checkout to ensure coupon is applied
+
+ENVIRONMENT VARIABLES SUMMARY:
+------------------------------
+
+Backend (Heroku):
+- STRIPE_PROMOTION_COUPON_ID=3PTHivK6 (dev)
+- STRIPE_PROMOTION_COUPON_ID=9ymsNuPO (production)
+- STRIPE_PROMOTION_CODE_ID=promo_1SjcxODVmAeT8ZSFJaeTtrwp (dev)
+- STRIPE_PROMOTION_CODE_ID=promo_1SkMQwGUcz2TV8H1FVP0y3kS (production)
+
+Frontend (Vercel) - ADD THESE:
+- NEXT_PUBLIC_STRIPE_PROMOTION_COUPON_ID=3PTHivK6 (dev)
+- NEXT_PUBLIC_STRIPE_PROMOTION_COUPON_ID=9ymsNuPO (production)
+- NEXT_PUBLIC_STRIPE_PROMOTION_CODE_ID=promo_1SjcxODVmAeT8ZSFJaeTtrwp (dev, optional)
+- NEXT_PUBLIC_STRIPE_PROMOTION_CODE_ID=promo_1SkMQwGUcz2TV8H1FVP0y3kS (production, optional)
+
+NOTE: The code will check both NEXT_PUBLIC_ and non-prefixed versions as fallback,
+but NEXT_PUBLIC_ is required for client-side access in Next.js.
+
