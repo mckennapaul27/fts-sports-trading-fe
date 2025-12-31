@@ -12,13 +12,13 @@ To activate the 50% off promotion for All Systems Yearly in production:
      * Percentage: 50%
      * Duration: Once (applies to first payment only)
      * Expires: January 31, 2026
-     * Applies to: All Systems product (prod_TePQBlRJx6Yfol)
-   - Save and note the Coupon ID (e.g., "3PTHivK6")
+     * Applies to: All Systems product (prod_TePQBlRJx6Yfol)  - prod_TePQBlRJx6Yfol IS THE ACTUAL PRODUCT ID
+   - Save and note the Coupon ID (e.g., "3PTHivK6") THE LIVE COUPON ID IS 9ymsNuPO
    
    - Create Promotion Code:
      * Code: "JAN50" (optional, for manual entry if needed)
      * Link it to the coupon you just created
-     * Note the Promotion Code API ID
+     * Note the Promotion Code API ID - THE PROMOTION ID IS promo_1SkMQwGUcz2TV8H1FVP0y3kS
 
 2. SET ENVIRONMENT VARIABLES
    --------------------------

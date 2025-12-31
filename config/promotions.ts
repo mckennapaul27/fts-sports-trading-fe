@@ -9,9 +9,9 @@ import { PRODUCT_IDS } from "./stripe-products";
  * - Promotion Code API ID: promo_1Sjcx0DVmAeT8Z
  *
  * Production:
- * - Coupon ID: TBD (to be created in live Stripe account)
+ * - Coupon ID: 9ymsNuP0 (set via STRIPE_PROMOTION_COUPON_ID env var)
  * - Promotion Code: JAN50
- * - Promotion Code API ID: TBD
+ * - Promotion Code API ID: promo_1SkMQwGUcz2TV8H1FVP0y3kS (set via STRIPE_PROMOTION_CODE_ID env var)
  */
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -64,11 +64,8 @@ export const PROMOTIONS: Promotion[] = [
   {
     id: "january-2026",
     name: "January 2026 - 50% Off All Systems Yearly",
-    // For testing: start date set to past, end date set to future
-    // TODO: Update to actual dates when ready for production
-    // Production dates: startDate: "2026-01-01T00:00:00Z", endDate: "2026-01-31T23:59:59Z"
-    startDate: "2025-01-01T00:00:00Z", // Changed to past date for testing
-    endDate: "2026-12-31T23:59:59Z", // Extended to future date for testing
+    startDate: "2026-01-01T00:00:00Z",
+    endDate: "2026-01-31T23:59:59Z",
     couponId: isProduction
       ? PRODUCTION_COUPON_IDS.JANUARY_2026
       : TEST_COUPON_IDS.JANUARY_2026,
