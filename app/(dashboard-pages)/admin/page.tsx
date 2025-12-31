@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import {
@@ -41,6 +41,60 @@ const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
 function formatCurrency(num: number): string {
   return num.toFixed(2);
 }
+
+// Debounced Input Component
+const DebouncedInput = ({
+  value: initialValue,
+  onChange,
+  debounce = 500,
+  type,
+  style,
+  placeholder,
+  className,
+  ...props
+}: {
+  value: any;
+  onChange: any;
+  debounce?: number;
+  type?: string;
+  placeholder?: string;
+  className?: string;
+  style?: any;
+  onClick?: (e: React.MouseEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+}) => {
+  const [value, setValue] = useState(initialValue);
+  const initialRender = useRef(true);
+
+  useEffect(() => {
+    setValue(initialValue);
+  }, [initialValue]);
+
+  useEffect(() => {
+    if (initialRender.current) {
+      initialRender.current = false;
+      return;
+    }
+    const handler = setTimeout(() => {
+      if (value !== initialValue) {
+        onChange(value);
+      }
+    }, debounce);
+    return () => clearTimeout(handler);
+  }, [value, initialValue, debounce, onChange]);
+
+  return (
+    <input
+      {...props}
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      className={className}
+      type={type}
+      style={style}
+      placeholder={placeholder}
+    />
+  );
+};
 
 interface System {
   _id: string;
@@ -163,6 +217,24 @@ export default function AdminSelectionsPage() {
     UnmatchedSelection[]
   >([]);
 
+  // Filter states
+  const [horseFilter, setHorseFilter] = useState<string>("");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [meetingFilter, setMeetingFilter] = useState<string>("all");
+  const [resultFilter, setResultFilter] = useState<string>("all");
+  const [dateSort, setDateSort] = useState<"asc" | "desc" | null>(null);
+
+  // Filter options
+  const [filterOptions, setFilterOptions] = useState<{
+    countries: string[];
+    meetings: string[];
+    results: string[];
+  }>({
+    countries: [],
+    meetings: [],
+    results: [],
+  });
+
   const {
     register: registerCreate,
     handleSubmit: handleSubmitCreate,
@@ -240,6 +312,36 @@ export default function AdminSelectionsPage() {
     fetchSystems();
   }, []);
 
+  // Fetch filter options
+  useEffect(() => {
+    if (!session?.accessToken || !activeSystemTab) return;
+
+    const fetchFilterOptions = async () => {
+      try {
+        const response = await fetch(
+          `${apiUrl}/api/selections/filters?systemId=${activeSystemTab}`,
+          {
+            headers: {
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+          }
+        );
+        const data = await response.json();
+        if (data.success && data.data) {
+          setFilterOptions({
+            countries: data.data.countries || [],
+            meetings: data.data.meetings || [],
+            results: data.data.results || [],
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching filter options:", err);
+      }
+    };
+
+    fetchFilterOptions();
+  }, [session?.accessToken, activeSystemTab]);
+
   // Fetch selections with pagination
   const fetchSelections = async (reset = false) => {
     if (!session?.accessToken || !activeSystemTab) return;
@@ -258,8 +360,29 @@ export default function AdminSelectionsPage() {
       params.append("systemId", activeSystemTab); // Filter by selected system
       params.append("limit", "50");
       params.append("offset", currentOffset.toString());
-      params.append("sortBy", "rowOrder");
-      params.append("sortOrder", "desc");
+
+      // Apply filters
+      if (countryFilter && countryFilter !== "all") {
+        params.append("country", countryFilter);
+      }
+      if (meetingFilter && meetingFilter !== "all") {
+        params.append("meeting", meetingFilter);
+      }
+      if (horseFilter && horseFilter.trim()) {
+        params.append("horse", horseFilter.trim());
+      }
+      if (resultFilter && resultFilter !== "all") {
+        params.append("result", resultFilter);
+      }
+
+      // Apply sorting
+      if (dateSort) {
+        params.append("sortBy", "dateISO");
+        params.append("sortOrder", dateSort);
+      } else {
+        params.append("sortBy", "rowOrder");
+        params.append("sortOrder", "desc");
+      }
 
       const response = await fetch(
         `${apiUrl}/api/selections?${params.toString()}`,
@@ -303,7 +426,15 @@ export default function AdminSelectionsPage() {
     if (session?.accessToken && activeSystemTab) {
       fetchSelections(true);
     }
-  }, [session?.accessToken, activeSystemTab]);
+  }, [
+    session?.accessToken,
+    activeSystemTab,
+    horseFilter,
+    countryFilter,
+    meetingFilter,
+    resultFilter,
+    dateSort,
+  ]);
 
   const onCreateSubmit = async (data: SelectionFormData) => {
     if (!session?.accessToken) return;
@@ -761,10 +892,57 @@ export default function AdminSelectionsPage() {
     localStorage.removeItem("admin_unmatched_selections");
   };
 
+  // Toggle date sort
+  const handleDateSort = () => {
+    if (dateSort === null) {
+      setDateSort("desc");
+    } else if (dateSort === "desc") {
+      setDateSort("asc");
+    } else {
+      setDateSort(null);
+    }
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setCountryFilter("all");
+    setMeetingFilter("all");
+    setHorseFilter("");
+    setResultFilter("all");
+    setDateSort(null);
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters =
+    countryFilter !== "all" ||
+    meetingFilter !== "all" ||
+    horseFilter.trim() !== "" ||
+    resultFilter !== "all" ||
+    dateSort !== null;
+
   const columns: ColumnDef<Selection>[] = [
     {
       accessorKey: "dateISO",
-      header: "Date",
+      header: () => (
+        <div className="flex items-center gap-2">
+          <span>Date</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleDateSort}
+            className="h-6 w-6 p-0"
+            title={
+              dateSort === null
+                ? "Sort by date"
+                : dateSort === "desc"
+                ? "Sort ascending"
+                : "Clear sort"
+            }
+          >
+            {dateSort === null ? "↕" : dateSort === "desc" ? "↓" : "↑"}
+          </Button>
+        </div>
+      ),
     },
     {
       accessorKey: "systemId.name",
@@ -773,11 +951,45 @@ export default function AdminSelectionsPage() {
     },
     {
       accessorKey: "country",
-      header: "Country",
+      header: () => (
+        <div className="flex flex-col gap-1">
+          <span>Country</span>
+          <select
+            value={countryFilter}
+            onChange={(e) => setCountryFilter(e.target.value)}
+            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <option value="all">All</option>
+            {filterOptions.countries.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
+        </div>
+      ),
     },
     {
       accessorKey: "meeting",
-      header: "Meeting",
+      header: () => (
+        <div className="flex flex-col gap-1">
+          <span>Meeting</span>
+          <select
+            value={meetingFilter}
+            onChange={(e) => setMeetingFilter(e.target.value)}
+            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <option value="all">All</option>
+            {filterOptions.meetings.map((meeting) => (
+              <option key={meeting} value={meeting}>
+                {meeting}
+              </option>
+            ))}
+          </select>
+        </div>
+      ),
     },
     {
       accessorKey: "time",
@@ -785,7 +997,20 @@ export default function AdminSelectionsPage() {
     },
     {
       accessorKey: "horse",
-      header: "Horse",
+      header: () => (
+        <div className="flex flex-col gap-1">
+          <span>Horse</span>
+          <DebouncedInput
+            value={horseFilter}
+            onChange={(value: string) => setHorseFilter(value)}
+            placeholder="Search..."
+            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white h-7"
+            debounce={500}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => e.stopPropagation()}
+          />
+        </div>
+      ),
     },
     // {
     //   accessorKey: "isNew",
@@ -802,7 +1027,24 @@ export default function AdminSelectionsPage() {
     // },
     {
       accessorKey: "result",
-      header: "Result",
+      header: () => (
+        <div className="flex flex-col gap-1">
+          <span>Result</span>
+          <select
+            value={resultFilter}
+            onChange={(e) => setResultFilter(e.target.value)}
+            className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <option value="all">All</option>
+            {filterOptions.results.map((result) => (
+              <option key={result} value={result}>
+                {result}
+              </option>
+            ))}
+          </select>
+        </div>
+      ),
       cell: ({ row }) => {
         // console.log("row", row);
         const result = row.getValue("result") as string;
@@ -1793,18 +2035,32 @@ export default function AdminSelectionsPage() {
           {/* Selections Table */}
           <div className="bg-white border border-gray-200 rounded-lg p-6">
             <div className="mb-4 pb-4 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-dark-navy mb-2">
-                Selections Table
-              </h2>
-              {activeSystemTab && systems.length > 0 && (
-                <p className="text-sm text-gray-600">
-                  Showing selections for:{" "}
-                  <span className="font-semibold text-dark-navy">
-                    {systems.find((s) => s._id === activeSystemTab)?.name ||
-                      "All Systems"}
-                  </span>
-                </p>
-              )}
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-semibold text-dark-navy mb-2">
+                    Selections Table
+                  </h2>
+                  {activeSystemTab && systems.length > 0 && (
+                    <p className="text-sm text-gray-600">
+                      Showing selections for:{" "}
+                      <span className="font-semibold text-dark-navy">
+                        {systems.find((s) => s._id === activeSystemTab)?.name ||
+                          "All Systems"}
+                      </span>
+                    </p>
+                  )}
+                </div>
+                {hasActiveFilters && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearFilters}
+                    className="text-xs"
+                  >
+                    Clear Filters
+                  </Button>
+                )}
+              </div>
             </div>
             {loading ? (
               <div className="text-center py-12">
