@@ -160,6 +160,23 @@ type ResultFormData = {
   placeBsp?: number;
 };
 
+// Combined form schema for unmatched selections (edit + result)
+const unmatchedEditFormSchema = z.object({
+  country: z.string().optional(),
+  meeting: z.string().optional(),
+  result: z.string().optional(),
+  winBsp: z.any().optional(),
+});
+
+type UnmatchedEditFormDataRaw = z.infer<typeof unmatchedEditFormSchema>;
+
+type UnmatchedEditFormData = {
+  country?: string;
+  meeting?: string;
+  result?: string;
+  winBsp?: number;
+};
+
 interface BulkSelectionRow {
   id: string;
   horse: string;
@@ -180,6 +197,7 @@ export default function AdminSelectionsPage() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [resultDialogOpen, setResultDialogOpen] = useState(false);
+  const [unmatchedEditDialogOpen, setUnmatchedEditDialogOpen] = useState(false);
   const [selectedSelection, setSelectedSelection] = useState<Selection | null>(
     null
   );
@@ -212,6 +230,7 @@ export default function AdminSelectionsPage() {
     systemId?: string;
     systemName?: string;
     row?: number;
+    meeting?: string; // Store meeting from selection
   }
   const [unmatchedSelections, setUnmatchedSelections] = useState<
     UnmatchedSelection[]
@@ -262,6 +281,18 @@ export default function AdminSelectionsPage() {
     setValue: setValueResult,
   } = useForm<ResultFormDataRaw>({
     resolver: zodResolver(resultFormSchema),
+    mode: "onSubmit",
+    shouldUnregister: false,
+  });
+
+  const {
+    register: registerUnmatchedEdit,
+    handleSubmit: handleSubmitUnmatchedEdit,
+    formState: { errors: errorsUnmatchedEdit },
+    reset: resetUnmatchedEdit,
+    setValue: setValueUnmatchedEdit,
+  } = useForm<UnmatchedEditFormDataRaw>({
+    resolver: zodResolver(unmatchedEditFormSchema),
     mode: "onSubmit",
     shouldUnregister: false,
   });
@@ -488,6 +519,21 @@ export default function AdminSelectionsPage() {
       if (result.success) {
         toast.success("Selection updated successfully");
         setEditDialogOpen(false);
+
+        // Remove from unmatched list if it was an unmatched selection
+        if (selectedSelection) {
+          const unmatchedIndex = unmatchedSelections.findIndex(
+            (item) =>
+              (item.dateISO || item.date) === selectedSelection.dateISO &&
+              item.time === selectedSelection.time &&
+              item.horse.toLowerCase().trim() ===
+                selectedSelection.horse.toLowerCase().trim()
+          );
+          if (unmatchedIndex !== -1) {
+            removeUnmatchedSelection(unmatchedIndex);
+          }
+        }
+
         setSelectedSelection(null);
         resetEdit();
         fetchSelections(true); // Reset pagination
@@ -636,6 +682,21 @@ export default function AdminSelectionsPage() {
       if (result.success) {
         toast.success("Results updated successfully");
         setResultDialogOpen(false);
+
+        // Remove from unmatched list if it was an unmatched selection
+        if (selectedSelection) {
+          const unmatchedIndex = unmatchedSelections.findIndex(
+            (item) =>
+              (item.dateISO || item.date) === selectedSelection.dateISO &&
+              item.time === selectedSelection.time &&
+              item.horse.toLowerCase().trim() ===
+                selectedSelection.horse.toLowerCase().trim()
+          );
+          if (unmatchedIndex !== -1) {
+            removeUnmatchedSelection(unmatchedIndex);
+          }
+        }
+
         setSelectedSelection(null);
         resetResult();
         fetchSelections(true); // Reset pagination
@@ -890,6 +951,218 @@ export default function AdminSelectionsPage() {
   const handleDismissUnmatched = () => {
     setUnmatchedSelections([]);
     localStorage.removeItem("admin_unmatched_selections");
+  };
+
+  // Find selection by dateISO, time, and horse name
+  const findSelectionByMatch = async (
+    dateISO: string,
+    time: string,
+    horse: string,
+    systemId?: string
+  ): Promise<Selection | null> => {
+    if (!session?.accessToken) return null;
+
+    try {
+      const params = new URLSearchParams();
+      if (systemId) {
+        params.append("systemId", systemId);
+      }
+      params.append("dateISO", dateISO);
+      params.append("limit", "100"); // Get enough to search through
+
+      const response = await fetch(
+        `${apiUrl}/api/selections?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+        }
+      );
+      const data = await response.json();
+      if (data.success && data.data) {
+        // Find matching selection by time and horse (case-insensitive)
+        const normalizedHorse = horse.toLowerCase().trim();
+        const match = data.data.find(
+          (sel: Selection) =>
+            sel.time === time &&
+            sel.horse.toLowerCase().trim() === normalizedHorse
+        );
+        return match || null;
+      }
+      return null;
+    } catch (err) {
+      console.error("Error finding selection:", err);
+      return null;
+    }
+  };
+
+  // Handle edit unmatched selection (combined edit + result dialog)
+  const handleEditUnmatched = async (item: UnmatchedSelection) => {
+    if (!item.dateISO && !item.date) {
+      toast.error("Date is required to find selection");
+      return;
+    }
+
+    const dateISO = item.dateISO || item.date;
+    if (!dateISO || !item.time || !item.horse) {
+      toast.error("Missing required fields to find selection");
+      return;
+    }
+
+    const selection = await findSelectionByMatch(
+      dateISO,
+      item.time,
+      item.horse,
+      item.systemId
+    );
+
+    if (selection) {
+      setSelectedSelection(selection);
+      setValueUnmatchedEdit("country", selection.country || "");
+      setValueUnmatchedEdit("meeting", selection.meeting || "");
+      setValueUnmatchedEdit("result", selection.result || "");
+      setValueUnmatchedEdit("winBsp", selection.winBsp || undefined);
+      setUnmatchedEditDialogOpen(true);
+    } else {
+      toast.error(
+        `Could not find selection: ${item.horse} on ${dateISO} at ${item.time}`
+      );
+    }
+  };
+
+  // Handle add result for unmatched selection
+  const handleAddResultUnmatched = async (item: UnmatchedSelection) => {
+    if (!item.dateISO && !item.date) {
+      toast.error("Date is required to find selection");
+      return;
+    }
+
+    const dateISO = item.dateISO || item.date;
+    if (!dateISO || !item.time || !item.horse) {
+      toast.error("Missing required fields to find selection");
+      return;
+    }
+
+    const selection = await findSelectionByMatch(
+      dateISO,
+      item.time,
+      item.horse,
+      item.systemId
+    );
+
+    if (selection) {
+      openResultDialog(selection);
+    } else {
+      toast.error(
+        `Could not find selection: ${item.horse} on ${dateISO} at ${item.time}`
+      );
+    }
+  };
+
+  // Submit handler for combined unmatched edit dialog
+  const onUnmatchedEditSubmit = async (dataRaw: UnmatchedEditFormDataRaw) => {
+    if (!session?.accessToken || !selectedSelection) return;
+
+    // Convert winBsp to number
+    const data: UnmatchedEditFormData = {
+      country: dataRaw.country,
+      meeting: dataRaw.meeting,
+      result: dataRaw.result,
+      winBsp:
+        dataRaw.winBsp === "" ||
+        dataRaw.winBsp === null ||
+        dataRaw.winBsp === undefined
+          ? undefined
+          : typeof dataRaw.winBsp === "string"
+          ? isNaN(Number(dataRaw.winBsp))
+            ? undefined
+            : Number(dataRaw.winBsp)
+          : dataRaw.winBsp,
+    };
+
+    setIsSubmitting(true);
+    try {
+      // First, update the selection (country and meeting)
+      if (data.country !== undefined || data.meeting !== undefined) {
+        const updateData: any = {};
+        if (data.country !== undefined) updateData.country = data.country;
+        if (data.meeting !== undefined) updateData.meeting = data.meeting;
+
+        const updateResponse = await fetch(
+          `${apiUrl}/api/selections/${selectedSelection._id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+            body: JSON.stringify(updateData),
+          }
+        );
+
+        const updateResult = await updateResponse.json();
+        if (!updateResult.success) {
+          toast.error(updateResult.error || "Failed to update selection");
+          return;
+        }
+      }
+
+      // Then, add/update the result if provided
+      if (data.result) {
+        const resultData: ResultFormData = {
+          result: data.result,
+          winBsp: data.winBsp,
+        };
+
+        const resultResponse = await fetch(
+          `${apiUrl}/api/selections/${selectedSelection._id}/results`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${session.accessToken}`,
+            },
+            body: JSON.stringify(resultData),
+          }
+        );
+
+        const resultResult = await resultResponse.json();
+        if (!resultResult.success) {
+          toast.error(resultResult.error || "Failed to update results");
+          return;
+        }
+      }
+
+      // Success - remove from unmatched list
+      const unmatchedIndex = unmatchedSelections.findIndex(
+        (item) =>
+          (item.dateISO || item.date) === selectedSelection.dateISO &&
+          item.time === selectedSelection.time &&
+          item.horse.toLowerCase().trim() ===
+            selectedSelection.horse.toLowerCase().trim()
+      );
+      if (unmatchedIndex !== -1) {
+        removeUnmatchedSelection(unmatchedIndex);
+      }
+
+      toast.success("Selection and results updated successfully");
+      setUnmatchedEditDialogOpen(false);
+      setSelectedSelection(null);
+      resetUnmatchedEdit();
+      fetchSelections(true); // Reset pagination
+    } catch (err) {
+      console.error("Error updating unmatched selection:", err);
+      toast.error("Failed to update selection");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Remove unmatched selection from list
+  const removeUnmatchedSelection = (index: number) => {
+    const updated = unmatchedSelections.filter((_, i) => i !== index);
+    setUnmatchedSelections(updated);
+    localStorage.setItem("admin_unmatched_selections", JSON.stringify(updated));
   };
 
   // Toggle date sort
@@ -1190,64 +1463,111 @@ export default function AdminSelectionsPage() {
 
   return (
     <div className="max-w-7xl mx-auto">
-      {/* Unmatched Selections Notification */}
+      {/* Unmatched Selections Table */}
       {unmatchedSelections.length > 0 && (
-        <div className="mb-6 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md shadow-sm">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start flex-1">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5 mr-3 flex-shrink-0" />
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-yellow-900 mb-2">
-                  {unmatchedSelections.length} Unmatched Selection
-                  {unmatchedSelections.length !== 1 ? "s" : ""} Found
-                </h3>
-                <p className="text-xs text-yellow-800 mb-3">
-                  The following selections could not be matched to rows in the
-                  uploaded CSV:
-                </p>
-                <div className="max-h-64 overflow-y-auto">
-                  <div className="space-y-2">
-                    {unmatchedSelections.map((item, index) => (
-                      <div
-                        key={index}
-                        className="bg-white border border-yellow-200 rounded p-2 text-xs"
-                      >
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <p className="font-semibold text-gray-900">
-                              {item.horse}
-                            </p>
-                            <p className="text-gray-600 mt-1">
-                              {item.dateISO || item.date} at {item.time}
-                              {item.systemName && (
-                                <span className="ml-2 text-gray-500">
-                                  ({item.systemName})
-                                </span>
-                              )}
-                            </p>
-                            {item.reason && (
-                              <p className="text-gray-500 mt-1 italic">
-                                {item.reason}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+        <div className="mb-6 bg-white border border-yellow-200 rounded-lg shadow-sm">
+          <div className="bg-yellow-50 border-b border-yellow-200 px-6 py-4 rounded-t-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+                <div>
+                  <h3 className="text-sm font-semibold text-yellow-900">
+                    {unmatchedSelections.length} Unmatched Selection
+                    {unmatchedSelections.length !== 1 ? "s" : ""} Found
+                  </h3>
+                  <p className="text-xs text-yellow-800 mt-1">
+                    The following selections could not be matched to rows in the
+                    uploaded CSV. Edit country/meeting or add results directly.
+                  </p>
                 </div>
               </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleDismissUnmatched}
+                className="text-yellow-700 hover:text-yellow-900 hover:bg-yellow-100"
+                aria-label="Dismiss all unmatched selections"
+              >
+                <X className="w-4 h-4 mr-2" />
+                Dismiss All
+              </Button>
             </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleDismissUnmatched}
-              className="ml-4 text-yellow-700 hover:text-yellow-900 hover:bg-yellow-100 flex-shrink-0"
-              aria-label="Dismiss notification"
-            >
-              <X className="w-4 h-4" />
-            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Horse
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Time
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Meeting
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    System
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Reason
+                  </th>
+                  <th className="text-left py-3 px-6 text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {unmatchedSelections.map((item, index) => (
+                  <tr key={index} className="hover:bg-gray-50">
+                    <td className="py-3 px-6 text-sm font-medium text-gray-900">
+                      {item.horse}
+                    </td>
+                    <td className="py-3 px-6 text-sm text-gray-600">
+                      {item.dateISO || item.date}
+                    </td>
+                    <td className="py-3 px-6 text-sm text-gray-600">
+                      {item.time}
+                    </td>
+                    <td className="py-3 px-6 text-sm text-gray-600">
+                      {item.meeting || "-"}
+                    </td>
+                    <td className="py-3 px-6 text-sm text-gray-600">
+                      {item.systemName || "-"}
+                    </td>
+                    <td className="py-3 px-6 text-sm text-gray-500 italic">
+                      {item.reason}
+                    </td>
+                    <td className="py-3 px-6 text-sm">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleEditUnmatched(item)}
+                          className="text-xs bg-blue-50 text-blue-600 hover:bg-blue-100"
+                        >
+                          <Edit className="w-3 h-3 mr-1" />
+                          Edit & Add Result
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeUnmatchedSelection(index)}
+                          className="text-xs text-gray-400 hover:text-gray-600"
+                          title="Remove from list"
+                        >
+                          <X className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
@@ -2025,6 +2345,172 @@ export default function AdminSelectionsPage() {
                       </>
                     ) : (
                       "Save Results"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
+
+          {/* Unmatched Edit & Result Dialog (Combined) */}
+          <Dialog
+            open={unmatchedEditDialogOpen}
+            onOpenChange={setUnmatchedEditDialogOpen}
+          >
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Edit Selection & Add Result</DialogTitle>
+                <DialogDescription>
+                  {selectedSelection && (
+                    <>
+                      Update country/meeting and add results for{" "}
+                      <strong>{selectedSelection.horse}</strong> on{" "}
+                      {selectedSelection.dateISO}
+                    </>
+                  )}
+                </DialogDescription>
+              </DialogHeader>
+              <form
+                onSubmit={handleSubmitUnmatchedEdit(onUnmatchedEditSubmit)}
+                noValidate
+              >
+                <div className="space-y-4 py-4">
+                  {selectedSelection && (
+                    <div className="bg-gray-50 p-3 rounded-md mb-4">
+                      <p className="text-sm text-gray-600">
+                        <strong>System:</strong>{" "}
+                        {selectedSelection.systemId.name}
+                        <br />
+                        <strong>Date:</strong> {selectedSelection.dateISO}
+                        <br />
+                        <strong>Time:</strong> {selectedSelection.time || "N/A"}
+                        <br />
+                        <strong>Horse:</strong> {selectedSelection.horse}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="unmatched-country">Country</Label>
+                      <select
+                        id="unmatched-country"
+                        {...registerUnmatchedEdit("country")}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold mt-1"
+                      >
+                        <option value="">Select a country</option>
+                        {COUNTRIES.map((country) => (
+                          <option key={country} value={country}>
+                            {country}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <Label htmlFor="unmatched-meeting">Meeting</Label>
+                      <select
+                        id="unmatched-meeting"
+                        {...registerUnmatchedEdit("meeting")}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold mt-1"
+                      >
+                        <option value="">Select a meeting</option>
+                        {MEETINGS.map((meeting) => (
+                          <option key={meeting} value={meeting}>
+                            {meeting}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="border-t pt-4 mt-4">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3">
+                      Result Information
+                    </h3>
+                    <div>
+                      <Label htmlFor="unmatched-result">Result *</Label>
+                      <select
+                        id="unmatched-result"
+                        {...registerUnmatchedEdit("result")}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gold mt-1"
+                      >
+                        <option value="">Select result</option>
+                        <option value="WON">WON</option>
+                        <option value="LOST">LOST</option>
+                        <option value="NR">NR</option>
+                        <option value="VOID">VOID</option>
+                        <option value="CANCELLED">CANCELLED</option>
+                      </select>
+                      {errorsUnmatchedEdit.result && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {errorsUnmatchedEdit.result.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="mt-4">
+                      <Label htmlFor="unmatched-winBsp">
+                        Win BSP (Optional)
+                      </Label>
+                      <Input
+                        id="unmatched-winBsp"
+                        type="number"
+                        step="0.01"
+                        {...registerUnmatchedEdit("winBsp", {
+                          setValueAs: (v) => {
+                            if (
+                              v === "" ||
+                              v === null ||
+                              v === undefined ||
+                              v === "0.00" ||
+                              v === 0
+                            ) {
+                              return undefined;
+                            }
+                            return v;
+                          },
+                        })}
+                        placeholder="0.00"
+                        className="mt-1"
+                      />
+                      {errorsUnmatchedEdit.winBsp && (
+                        <p className="text-red-500 text-sm mt-1">
+                          {String(
+                            errorsUnmatchedEdit.winBsp.message ||
+                              "Invalid input"
+                          )}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="bg-blue-50 border border-blue-200 rounded-md p-3 mt-4">
+                    <p className="text-sm text-blue-800">
+                      <strong>Note:</strong> Win PL and Running Win PL will be
+                      calculated automatically on the backend.
+                    </p>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setUnmatchedEditDialogOpen(false);
+                      setSelectedSelection(null);
+                      resetUnmatchedEdit();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save All"
                     )}
                   </Button>
                 </DialogFooter>

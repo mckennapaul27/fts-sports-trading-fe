@@ -97,8 +97,9 @@ export function PlanDisplay({
   }
 
   const features = planFeatures[planKey] || planFeatures["Single System"];
-  const { price: originalPrice, period } = planPrices[planKey] || planPrices["Single System"];
-  
+  const { price: originalPrice, period } =
+    planPrices[planKey] || planPrices["Single System"];
+
   // Get promotional pricing if available
   const priceInfo = getFormattedPrice(productId, originalPrice, period);
 
