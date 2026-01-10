@@ -54,6 +54,12 @@ export function NavbarDesktop() {
             >
               Systems
             </Link>
+            <Link
+              href="/automation"
+              className="text-white hover:text-gold transition-colors"
+            >
+              Automation
+            </Link>
           </div>
 
           <div className="flex items-center gap-4">

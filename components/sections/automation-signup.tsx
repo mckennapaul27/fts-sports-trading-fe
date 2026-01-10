@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
 
-export function NewsletterSignup() {
+export function AutomationSignup() {
   const [email, setEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -21,31 +21,36 @@ export function NewsletterSignup() {
     const apiUrl = process.env.NEXT_PUBLIC_SERVER_URL || "";
 
     try {
-      const response = await fetch(`${apiUrl}/api/users/newsletter-subscribe`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim().toLowerCase(),
-        }),
-      });
+      const response = await fetch(
+        `${apiUrl}/api/users/automation-bot-subscribe`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim().toLowerCase(),
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok && data.success) {
-        toast.success(data.message || "Successfully subscribed to newsletter");
+        toast.success(
+          data.message ||
+            "Successfully subscribed! We'll notify you when automation is ready."
+        );
         setEmail("");
       } else {
         // Handle error responses
         const errorMessage =
-          data.message ||
-          "Failed to subscribe to newsletter. Please try again later.";
+          data.message || "Failed to subscribe. Please try again later.";
         toast.error(errorMessage);
       }
     } catch (error) {
-      console.error("Newsletter subscription error:", error);
-      toast.error("Failed to subscribe to newsletter. Please try again later.");
+      console.error("Automation signup error:", error);
+      toast.error("Failed to subscribe. Please try again later.");
     } finally {
       setIsSubmitting(false);
     }
@@ -56,15 +61,16 @@ export function NewsletterSignup() {
       <div className="container mx-auto px-6 sm:px-8 xl:px-12">
         <div className="text-center">
           <h2 className="text-3xl lg:text-4xl font-bold text-dark-navy mb-4">
-            Regular performance update
+            Stay in the Loop
           </h2>
-          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto ">
-            Get monthly summaries and system updates delivered to your inbox.
+          <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+            Subscribe to be notified when our automation bot is ready to go
+            live. Get updates on development progress and launch announcements.
           </p>
 
           <form
             onSubmit={handleSubmit}
-            className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto "
+            className="flex flex-col sm:flex-row gap-4 max-w-xl mx-auto"
           >
             <Input
               type="email"
@@ -82,7 +88,7 @@ export function NewsletterSignup() {
               className="w-full sm:w-auto"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Subscribing..." : "Subscribe"}
+              {isSubmitting ? "Subscribing..." : "Notify Me"}
             </Button>
           </form>
         </div>

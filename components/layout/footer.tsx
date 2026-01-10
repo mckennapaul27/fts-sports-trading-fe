@@ -113,6 +113,7 @@ const quickLinks = [
   { label: "Methodology", href: "/methodology" },
   { label: "Membership", href: "/membership" },
   { label: "Systems", href: "/systems" },
+  { label: "Automation", href: "/automation" },
   { label: "About", href: "/about" },
 ];
 

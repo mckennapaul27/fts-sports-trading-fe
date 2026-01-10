@@ -5,6 +5,7 @@ import { NavbarDesktop } from "./NavbarDesktop";
 import { NavbarTouch } from "./NavbarTouch";
 import { ComplianceStrip } from "@/components/sections/compliance-strip";
 import { Footer } from "./footer";
+import { NewsletterPopup } from "./newsletter-popup";
 
 export function ConditionalNavbarFooter({
   children,
@@ -28,6 +29,7 @@ export function ConditionalNavbarFooter({
         <>
           <ComplianceStrip />
           <Footer />
+          <NewsletterPopup />
         </>
       )}
     </>

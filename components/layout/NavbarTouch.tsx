@@ -73,6 +73,13 @@ export function NavbarTouch() {
           >
             Systems
           </Link>
+          <Link
+            href="/automation"
+            className="block text-white hover:text-gold transition-colors py-2"
+            onClick={() => setOpen(false)}
+          >
+            Automation
+          </Link>
           <div className="pt-4 space-y-3 border-t border-gold/20">
             <Link
               href="/sign-in"

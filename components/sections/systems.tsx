@@ -1,7 +1,12 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { ChartLine, ChartNoAxesColumnIncreasing, Target } from "lucide-react";
+import {
+  ChartLine,
+  ChartNoAxesColumnIncreasing,
+  Target,
+  Timer,
+} from "lucide-react";
 
 interface System {
   systemId: string;
@@ -137,10 +142,18 @@ function getLiveSinceYear(systemName: string, index: number): string {
   return defaultYears[index] || "2022";
 }
 
+// Check if system is 2, 3, or 4
+function isSystem234(systemSlug: string, systemName: string): boolean {
+  const slugMatch = systemSlug.match(/system-([234])/);
+  if (slugMatch) {
+    return true;
+  }
+  const nameMatch = systemName.match(/System\s+([234])/i);
+  return !!nameMatch;
+}
+
 export async function Systems({ bgColor = "bg-cream" }: { bgColor?: string }) {
   const systems = await getAllSystems();
-
-  console.log(systems);
 
   return (
     <section className={`${bgColor} py-16 sm:py-20 lg:py-24`}>
@@ -168,6 +181,10 @@ export async function Systems({ bgColor = "bg-cream" }: { bgColor?: string }) {
                   system.systemName,
                   index
                 );
+                const isWarningSystem = isSystem234(
+                  system.systemSlug,
+                  system.systemName
+                );
 
                 return (
                   <div
@@ -194,10 +211,17 @@ export async function Systems({ bgColor = "bg-cream" }: { bgColor?: string }) {
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-medium">
-                        <CheckmarkBadgeIcon />
-                        <span>Included</span>
-                      </div>
+                      {isWarningSystem ? (
+                        <div className="flex items-center gap-1.5 bg-yellow-50 text-yellow-700 border border-yellow-200 px-3 py-1 rounded-full text-xs font-medium">
+                          <Timer className="w-4 h-4" />
+                          <span>Testing</span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-full text-xs font-medium">
+                          <CheckmarkBadgeIcon />
+                          <span>Live</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Statistics */}
