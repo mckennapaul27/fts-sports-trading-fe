@@ -5,7 +5,6 @@ import {
   ChartLine,
   ChartNoAxesColumnIncreasing,
   Target,
-  Timer,
 } from "lucide-react";
 
 interface System {
@@ -138,18 +137,8 @@ function getLiveSinceYear(systemName: string, index: number): string {
     return yearMatch[0];
   }
   // Default years based on system number
-  const defaultYears = ["2021", "2022", "2022"];
+  const defaultYears = ["2021", "2022", "2022", "2022"];
   return defaultYears[index] || "2022";
-}
-
-// Check if system is 2, 3, or 4
-function isSystem234(systemSlug: string, systemName: string): boolean {
-  const slugMatch = systemSlug.match(/system-([234])/);
-  if (slugMatch) {
-    return true;
-  }
-  const nameMatch = systemName.match(/System\s+([234])/i);
-  return !!nameMatch;
 }
 
 export async function Systems({ bgColor = "bg-cream" }: { bgColor?: string }) {
@@ -181,10 +170,6 @@ export async function Systems({ bgColor = "bg-cream" }: { bgColor?: string }) {
                   system.systemName,
                   index
                 );
-                const isWarningSystem = isSystem234(
-                  system.systemSlug,
-                  system.systemName
-                );
 
                 return (
                   <div
@@ -211,17 +196,10 @@ export async function Systems({ bgColor = "bg-cream" }: { bgColor?: string }) {
                           </p>
                         </div>
                       </div>
-                      {isWarningSystem ? (
-                        <div className="flex items-center gap-1.5 bg-yellow-50 text-yellow-700 border border-yellow-200 px-3 py-1 rounded-full text-xs font-medium">
-                          <Timer className="w-4 h-4" />
-                          <span>Testing</span>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-full text-xs font-medium">
-                          <CheckmarkBadgeIcon />
-                          <span>Live</span>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 px-3 py-1 rounded-full text-xs font-medium">
+                        <CheckmarkBadgeIcon />
+                        <span>Live</span>
+                      </div>
                     </div>
 
                     {/* Statistics */}

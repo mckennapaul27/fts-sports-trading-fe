@@ -20,14 +20,10 @@ const TEST_PRODUCT_IDS = {
 const PRODUCTION_PRODUCT_IDS = {
   ALL_SYSTEMS_YEARLY: "prod_TePQBlRJx6Yfol",
   ALL_SYSTEMS_MONTHLY: "prod_TePPJPkddMweFM",
-  SINGLE_SYSTEM_1: "prod_TePN1px9j4zOuA",
-  SINGLE_SYSTEM_2: "prod_TePNYKgxhmABMa",
-  SINGLE_SYSTEM_3: "prod_TePNTzP7ihKJXL",
-  SINGLE_SYSTEM_4: "prod_TePOmkdhHUwVjO",
-  SINGLE_SYSTEM_5: "prod_TePOjvXyL4Cw2M",
-  SINGLE_SYSTEM_6: "prod_TePO49X4qT3CZS",
-  SINGLE_SYSTEM_7: "prod_TePOghwnnYDHwq",
-  SINGLE_SYSTEM_8: "prod_TePPGZ57M6Rhw2",
+  SINGLE_SYSTEM_1: "prod_TePN1px9j4zOuA", // System 1 (unchanged)
+  SINGLE_SYSTEM_2: "prod_TsiAlPhzZIKfHW", // NEW System 2
+  SINGLE_SYSTEM_3: "prod_TsiAjjN0MymyAv", // NEW System 3
+  SINGLE_SYSTEM_4: "prod_TsiBgb2TuYyr0p", // System 4 (was System 8)
 };
 
 // Export the appropriate product IDs based on environment
@@ -43,10 +39,6 @@ export const getSingleSystemProductIds = (): string[] => {
       PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_2,
       PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_3,
       PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_4,
-      PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_5,
-      PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_6,
-      PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_7,
-      PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_8,
     ];
   } else {
     return [
@@ -65,10 +57,6 @@ export const getProductIdToSystemName = (): Record<string, string> => {
       [PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_2]: "System 2",
       [PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_3]: "System 3",
       [PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_4]: "System 4",
-      [PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_5]: "System 5",
-      [PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_6]: "System 6",
-      [PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_7]: "System 7",
-      [PRODUCTION_PRODUCT_IDS.SINGLE_SYSTEM_8]: "System 8",
     };
   } else {
     return {
@@ -94,12 +82,12 @@ export const isAllSystemsProduct = (productId: string): boolean => {
 
 // Helper function to get all system slugs as a comma-separated string
 export const getAllSystemSlugsString = (): string => {
-  const count = isProduction ? 8 : 3;
+  const count = isProduction ? 4 : 3;
   return Array.from({ length: count }, (_, i) => `system-${i + 1}`).join(",");
 };
 
 // Helper function to get all system slugs as an array
 export const getAllSystemSlugsArray = (): string[] => {
-  const count = isProduction ? 8 : 3;
+  const count = isProduction ? 4 : 3;
   return Array.from({ length: count }, (_, i) => `system-${i + 1}`);
 };

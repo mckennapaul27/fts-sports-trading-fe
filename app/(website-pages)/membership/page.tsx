@@ -77,12 +77,6 @@ const systemAccessData = [
     allSystems: true,
     annual: true,
   },
-  {
-    system: "System 5",
-    single: false,
-    allSystems: true,
-    annual: true,
-  },
 ];
 
 const membershipFAQItems = [

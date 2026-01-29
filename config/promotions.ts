@@ -5,13 +5,9 @@ import { PRODUCT_IDS } from "./stripe-products";
  *
  * Test Mode:
  * - Coupon ID: 3PTHivK6 (sandbox/test mode)
- * - Promotion Code: JAN50
- * - Promotion Code API ID: promo_1Sjcx0DVmAeT8Z
  *
  * Production:
- * - Coupon ID: 9ymsNuP0 (set via STRIPE_PROMOTION_COUPON_ID env var)
- * - Promotion Code: JAN50
- * - Promotion Code API ID: promo_1SkMQwGUcz2TV8H1FVP0y3kS (set via STRIPE_PROMOTION_CODE_ID env var)
+ * - Coupon ID: Set via STRIPE_PROMOTION_COUPON_ID env var
  */
 
 const isProduction = process.env.NODE_ENV === "production";
@@ -28,30 +24,17 @@ if (typeof window === "undefined" || process.env.NODE_ENV !== "production") {
 
 // Test Mode Coupon IDs (Sandbox)
 const TEST_COUPON_IDS = {
-  JANUARY_2026: "3PTHivK6", // Dev/test coupon ID
+  ALL_SYSTEMS_YEARLY_50_OFF: "3PTHivK6", // Dev/test coupon ID
 };
 
-// Production Coupon IDs (Live - to be set when created)
+// Production Coupon IDs (Live - set via environment variable)
 // Note: In Next.js, env vars used in client components need NEXT_PUBLIC_ prefix
 // But we also check server-side env vars as fallback for build-time evaluation
 const PRODUCTION_COUPON_IDS = {
-  JANUARY_2026:
+  ALL_SYSTEMS_YEARLY_50_OFF:
     process.env.NEXT_PUBLIC_STRIPE_PROMOTION_COUPON_ID ||
     process.env.STRIPE_PROMOTION_COUPON_ID ||
-    "", // Set when created in live account
-};
-
-// Test Mode Promotion Code IDs
-const TEST_PROMO_CODE_IDS = {
-  JANUARY_2026: "promo_1SjcxODVmAeT8ZSFJaeTtrwp", // Updated with correct test promo code ID
-};
-
-// Production Promotion Code IDs (to be set when created)
-const PRODUCTION_PROMO_CODE_IDS = {
-  JANUARY_2026:
-    process.env.NEXT_PUBLIC_STRIPE_PROMOTION_CODE_ID ||
-    process.env.STRIPE_PROMOTION_CODE_ID ||
-    "", // Set when created in live account
+    "", // Set via STRIPE_PROMOTION_COUPON_ID env var (production: o9Hv2Yq5)
 };
 
 export interface Promotion {
@@ -60,8 +43,6 @@ export interface Promotion {
   startDate: string; // ISO date string
   endDate: string; // ISO date string
   couponId: string; // Stripe coupon ID (environment-specific)
-  promotionCodeId?: string; // Stripe promotion code API ID (optional, environment-specific)
-  promotionCode?: string; // Human-readable code like "JAN50" (optional)
   applicableProducts: string[]; // Product IDs this promotion applies to
   discountPercentage: number;
   originalPrice: number;
@@ -70,21 +51,13 @@ export interface Promotion {
 
 export const PROMOTIONS: Promotion[] = [
   {
-    id: "january-2026",
-    name: "January 2026 - 50% Off All Systems Yearly",
-    // TESTING: Temporarily set to active dates for testing
-    // TODO: Before production, change back to:
-    // startDate: "2026-01-01T00:00:00Z",
-    // endDate: "2026-01-31T23:59:59Z",
-    startDate: "2025-01-01T00:00:00Z", // Testing: past date
-    endDate: "2026-12-31T23:59:59Z", // Testing: future date
+    id: "all-systems-yearly-50-off",
+    name: "All Systems - Yearly (50% Off)",
+    startDate: "2025-01-01T00:00:00Z", // Start date (past date to ensure it's active)
+    endDate: "2099-12-31T23:59:59Z", // No expiry - set to far future date
     couponId: isProduction
-      ? PRODUCTION_COUPON_IDS.JANUARY_2026
-      : TEST_COUPON_IDS.JANUARY_2026,
-    promotionCodeId: isProduction
-      ? PRODUCTION_PROMO_CODE_IDS.JANUARY_2026 || undefined
-      : TEST_PROMO_CODE_IDS.JANUARY_2026,
-    promotionCode: "JAN50",
+      ? PRODUCTION_COUPON_IDS.ALL_SYSTEMS_YEARLY_50_OFF
+      : TEST_COUPON_IDS.ALL_SYSTEMS_YEARLY_50_OFF,
     applicableProducts: [PRODUCT_IDS.ALL_SYSTEMS_YEARLY],
     discountPercentage: 50,
     originalPrice: 240,
@@ -101,25 +74,9 @@ export function getCouponIdForPromotion(promotionId: string): string {
   if (!promotion) return "";
 
   if (isProduction) {
-    return PRODUCTION_COUPON_IDS.JANUARY_2026 || "";
+    return PRODUCTION_COUPON_IDS.ALL_SYSTEMS_YEARLY_50_OFF || "";
   }
-  return TEST_COUPON_IDS.JANUARY_2026;
-}
-
-/**
- * Get promotion code ID for a promotion based on environment
- * Returns undefined if not configured
- */
-export function getPromotionCodeIdForPromotion(
-  promotionId: string
-): string | undefined {
-  const promotion = PROMOTIONS.find((p) => p.id === promotionId);
-  if (!promotion) return undefined;
-
-  if (isProduction) {
-    return PRODUCTION_PROMO_CODE_IDS.JANUARY_2026 || undefined;
-  }
-  return TEST_PROMO_CODE_IDS.JANUARY_2026;
+  return TEST_COUPON_IDS.ALL_SYSTEMS_YEARLY_50_OFF;
 }
 
 /**
