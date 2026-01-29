@@ -59,7 +59,11 @@ export function OddsRangeAnalysis({
             <div className="text-sm text-dark-navy">Win Rate</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-green mb-2">
+            <div
+              className={`text-3xl sm:text-4xl font-bold mb-2 ${
+                roi >= 0 ? "text-green" : "text-red-600"
+              }`}
+            >
               {roi >= 0 ? "+" : ""}
               {roi.toFixed(2)}%
             </div>
@@ -72,7 +76,11 @@ export function OddsRangeAnalysis({
             <div className="text-sm text-dark-navy">Total Bets</div>
           </div>
           <div className="text-center">
-            <div className="text-3xl sm:text-4xl font-bold text-green mb-2">
+            <div
+              className={`text-3xl sm:text-4xl font-bold mb-2 ${
+                filteredData.totalProfit >= 0 ? "text-green" : "text-red-600"
+              }`}
+            >
               {filteredData.totalProfit >= 0 ? "+" : ""}
               {formatCurrency(filteredData.totalProfit)}
             </div>
