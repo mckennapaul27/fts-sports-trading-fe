@@ -333,7 +333,7 @@ export default function BillingsPage() {
     {
       title: "ALL SYSTEMS",
       subtitle: "Full portfolio access",
-      price: "£30",
+      price: "£20",
       period: "/month",
       productId: PRODUCT_IDS.ALL_SYSTEMS_MONTHLY,
       priceId: "price_1ScQTNDVmAeT8ZSF5C6eupMx",

@@ -172,7 +172,7 @@ export default async function MembershipPage() {
                       Single (£10/mo)
                     </th>
                     <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-dark-navy">
-                      All Systems (£30/mo)
+                      All Systems (£20/mo)
                     </th>
                     <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-dark-navy">
                       Annual (£240/yr)

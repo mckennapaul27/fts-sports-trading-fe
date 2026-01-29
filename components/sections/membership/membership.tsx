@@ -64,7 +64,7 @@ const plans: PricingPlan[] = [
   {
     title: "ALL SYSTEMS",
     subtitle: "Full portfolio access",
-    price: "£30",
+    price: "£20",
     period: "/month",
     features: [
       "Access to all systems",
