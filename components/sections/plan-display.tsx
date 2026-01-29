@@ -53,7 +53,7 @@ const planFeatures: Record<string, string[]> = {
     "Full results history",
     "Priority support",
     "Cancel anytime",
-    "Save £120/year",
+    "Save £180/year",
   ],
 };
 

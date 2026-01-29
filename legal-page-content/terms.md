@@ -73,8 +73,8 @@ We reserve the right to suspend or terminate your account at any time, with or w
 We offer the following subscription plans:
 
 - **Single System:** £10 per month - Access to one selected system
-- **All Systems - Monthly:** £20 per month - Access to all systems
-- **All Systems - Yearly:** £240 per year - Access to all systems (saving £120/year)
+- **All Systems - Monthly:** £25 per month - Access to all systems
+- **All Systems - Yearly:** £240 per year - Access to all systems (saving £180/year)
 
 ### Payment Terms
 

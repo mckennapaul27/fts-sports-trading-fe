@@ -98,7 +98,7 @@ const membershipFAQItems = [
   {
     question: "Can I get a discount for multiple months?",
     answer:
-      "Yes, our annual plan offers the best value, saving you £120 per year compared to the monthly 'All Systems' plan. This is equivalent to 4 months free. We don't currently offer other multi-month discounts.",
+      "Yes, our annual plan offers the best value, saving you £180 per year compared to the monthly 'All Systems' plan. This is equivalent to over 7 months free. We don't currently offer other multi-month discounts.",
   },
   {
     question: "How do I cancel my membership?",
@@ -172,7 +172,7 @@ export default async function MembershipPage() {
                       Single (£10/mo)
                     </th>
                     <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-dark-navy">
-                      All Systems (£20/mo)
+                      All Systems (£25/mo)
                     </th>
                     <th className="border border-gray-300 px-4 py-3 text-center font-semibold text-dark-navy">
                       Annual (£240/yr)

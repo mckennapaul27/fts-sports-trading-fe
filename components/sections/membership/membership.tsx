@@ -64,7 +64,7 @@ const plans: PricingPlan[] = [
   {
     title: "ALL SYSTEMS",
     subtitle: "Full portfolio access",
-    price: "£20",
+    price: "£25",
     period: "/month",
     features: [
       "Access to all systems",
@@ -72,7 +72,7 @@ const plans: PricingPlan[] = [
       "Full results history",
       "Priority email support",
       "Cancel anytime",
-      "Save £20/month",
+      "Save £15/month",
     ],
     buttonText: "Choose Plan",
     buttonVariant: "secondary",
@@ -92,7 +92,7 @@ const plans: PricingPlan[] = [
       "Full results history",
       "Priority support",
       "Cancel anytime",
-      "Save £120/year",
+      "Save £180/year",
     ],
     buttonText: "Choose Plan",
     buttonVariant: "default",
