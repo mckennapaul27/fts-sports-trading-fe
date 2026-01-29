@@ -33,6 +33,7 @@ import {
   getAllSystemSlugsString,
   getAllSystemSlugsArray,
 } from "@/config/stripe-products";
+import { getFormattedPrice } from "@/lib/promotion-utils";
 
 interface BillingData {
   hasSubscription: boolean;
@@ -822,12 +823,56 @@ export default function BillingsPage() {
 
                 {/* Price */}
                 <div className="mb-6 pb-6 border-b border-gray-200">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-dark-navy">
-                      {plan.price}
-                    </span>
-                    <span className="text-lg text-gray-600">{plan.period}</span>
-                  </div>
+                  {(() => {
+                    // Extract numeric price from string (e.g., "£240" -> 240)
+                    const numericPrice = parseInt(
+                      plan.price.replace(/[£,]/g, "")
+                    );
+
+                    // Get formatted price with promotion if applicable
+                    const priceInfo = getFormattedPrice(
+                      plan.productId,
+                      numericPrice,
+                      plan.period
+                    );
+
+                    return (
+                      <>
+                        {priceInfo.isPromotional &&
+                          priceInfo.discountBadge && (
+                            <div className="mb-2">
+                              <span className="inline-block bg-gold text-white px-3 py-1 rounded-sm text-sm font-bold">
+                                {priceInfo.discountBadge}
+                              </span>
+                            </div>
+                          )}
+                        <div className="flex items-baseline gap-2 flex-wrap">
+                          {priceInfo.isPromotional ? (
+                            <>
+                              <span className="text-4xl font-bold text-dark-navy">
+                                {priceInfo.displayPrice}
+                              </span>
+                              <span className="text-lg text-gray-600">
+                                {plan.period}
+                              </span>
+                              <span className="text-lg text-gray-400 line-through">
+                                {priceInfo.originalPrice}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-4xl font-bold text-dark-navy">
+                                {plan.price}
+                              </span>
+                              <span className="text-lg text-gray-600">
+                                {plan.period}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </>
+                    );
+                  })()}
                 </div>
 
                 {/* Features */}
