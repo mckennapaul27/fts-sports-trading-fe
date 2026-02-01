@@ -104,7 +104,6 @@ export default function BillingsPage() {
     useState(false);
   const [selectedNewPlan, setSelectedNewPlan] = useState<{
     productId: string;
-    priceId: string;
     planName: string;
     systemSlugs?: string[];
   } | null>(null);
@@ -308,7 +307,8 @@ export default function BillingsPage() {
     return billingData?.currentPlan?.productId;
   };
 
-  // Plan definitions with product IDs and price IDs
+  // Plan definitions with product IDs
+  // Note: Price IDs are fetched dynamically by the backend from Stripe
   const planDefinitions = [
     {
       title: "SINGLE SYSTEM",
@@ -316,11 +316,6 @@ export default function BillingsPage() {
       price: "£10",
       period: "/month",
       productIds: getSingleSystemProductIds(),
-      priceIds: [
-        "price_1ScQSYDVmAeT8ZSFgfBMGFRe", // System 1
-        "price_1ScQSrDVmAeT8ZSFY0xxaGFU", // System 2
-        "price_1ScQT6DVmAeT8ZSFpyIFhcQF", // System 3
-      ],
       features: [
         "Access to 1 system",
         "Daily selections",
@@ -337,7 +332,6 @@ export default function BillingsPage() {
       price: "£25",
       period: "/month",
       productId: PRODUCT_IDS.ALL_SYSTEMS_MONTHLY,
-      priceId: "price_1ScQTNDVmAeT8ZSF5C6eupMx",
       features: [
         "Access to all systems",
         "Daily selections for all",
@@ -356,7 +350,6 @@ export default function BillingsPage() {
       price: "£240",
       period: "/year",
       productId: PRODUCT_IDS.ALL_SYSTEMS_YEARLY,
-      priceId: "price_1ScQTkDVmAeT8ZSFCjHUdkvO",
       features: [
         "Access to all systems",
         "Daily selections for all",
@@ -463,7 +456,6 @@ export default function BillingsPage() {
       if (plan.requiresSystemSelection) {
         setSelectedNewPlan({
           productId: "", // Will be set after system selection
-          priceId: "", // Will be set after system selection
           planName: "Single System",
         });
         setSystemSelectionDialogOpen(true);
@@ -486,7 +478,6 @@ export default function BillingsPage() {
     if (plan.requiresSystemSelection) {
       setSelectedNewPlan({
         productId: "", // Will be set after system selection
-        priceId: "", // Will be set after system selection
         planName: "Single System",
       });
       setSystemSelectionDialogOpen(true);
@@ -495,7 +486,6 @@ export default function BillingsPage() {
       const allSystemSlugs = getAllSystemSlugsArray();
       setSelectedNewPlan({
         productId: plan.productId!,
-        priceId: plan.priceId!,
         planName: plan.title,
         systemSlugs: allSystemSlugs,
       });
@@ -520,15 +510,8 @@ export default function BillingsPage() {
     }
 
     // User has subscription - handle downgrade/switch
-    // Find the corresponding price ID
-    const systemIndex = planDefinitions[0].productIds!.indexOf(
-      system.productId
-    );
-    const priceId = planDefinitions[0].priceIds![systemIndex];
-
     setSelectedNewPlan({
       productId: system.productId,
-      priceId: priceId,
       planName: "Single System",
       systemSlugs: [system.slug],
     });
@@ -559,7 +542,6 @@ export default function BillingsPage() {
         body: JSON.stringify({
           stripeSubscriptionId: billingData.currentPlan.stripeSubscriptionId,
           newProductId: selectedNewPlan.productId,
-          newPriceId: selectedNewPlan.priceId,
           systemSlugs: selectedNewPlan.systemSlugs || [],
         }),
       });

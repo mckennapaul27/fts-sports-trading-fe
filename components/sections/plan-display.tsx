@@ -45,7 +45,7 @@ const planFeatures: Record<string, string[]> = {
     "Full results history",
     "Priority email support",
     "Cancel anytime",
-    "Save £20/month",
+    "Save £15/month",
   ],
   "All Systems - Yearly": [
     "Access to all systems",
@@ -63,7 +63,7 @@ const planPrices: Record<string, { price: number; period: string }> = {
     period: "/month",
   },
   "All Systems - Monthly": {
-    price: 30,
+    price: 25,
     period: "/month",
   },
   "All Systems - Yearly": {
