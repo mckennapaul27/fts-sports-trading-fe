@@ -374,11 +374,12 @@ export default function AdminSelectionsPage() {
   }, [session?.accessToken, activeSystemTab]);
 
   // Fetch selections with pagination
+  // Frontend just sends params - backend handles all pagination logic
   const fetchSelections = async (reset = false) => {
     if (!session?.accessToken || !activeSystemTab) return;
 
-    const currentOffset = reset ? 0 : offset;
-    const isLoadingMore = !reset && currentOffset > 0;
+    const requestOffset = reset ? 0 : offset;
+    const isLoadingMore = !reset && offset > 0;
 
     if (isLoadingMore) {
       setLoadingMore(true);
@@ -388,9 +389,9 @@ export default function AdminSelectionsPage() {
 
     try {
       const params = new URLSearchParams();
-      params.append("systemId", activeSystemTab); // Filter by selected system
+      params.append("systemId", activeSystemTab);
       params.append("limit", "50");
-      params.append("offset", currentOffset.toString());
+      params.append("offset", requestOffset.toString());
 
       // Apply filters
       if (countryFilter && countryFilter !== "all") {
@@ -403,7 +404,11 @@ export default function AdminSelectionsPage() {
         params.append("horse", horseFilter.trim());
       }
       if (resultFilter && resultFilter !== "all") {
-        params.append("result", resultFilter);
+        if (resultFilter === "blank") {
+          params.append("result", "");
+        } else {
+          params.append("result", resultFilter);
+        }
       }
 
       // Apply sorting
@@ -424,17 +429,26 @@ export default function AdminSelectionsPage() {
         }
       );
       const data = await response.json();
+      
       if (data.success) {
+        // Backend is the source of truth - use its response directly
         if (reset) {
           setSelections(data.data || []);
-          setOffset(0);
         } else {
-          setSelections((prev) => [...prev, ...(data.data || [])]);
-          setOffset(currentOffset + (data.data?.length || 0));
+          // Deduplicate by _id when appending (safety net for edge cases)
+          setSelections((prev) => {
+            const existingIds = new Set(prev.map((s: Selection) => s._id));
+            const newSelections = (data.data || []).filter(
+              (s: Selection) => !existingIds.has(s._id)
+            );
+            return [...prev, ...newSelections];
+          });
         }
-        // Check if there are more results
-        // If we got less than the limit, there are no more
-        setHasMore((data.data?.length || 0) === 50);
+        
+        // Backend tells us the next offset - trust it completely
+        setOffset(data.nextOffset !== null && data.nextOffset !== undefined ? data.nextOffset : 0);
+        // Backend tells us if there's more - trust it completely
+        setHasMore(data.hasMore === true);
       } else {
         toast.error(data.error || "Failed to load selections");
       }
@@ -1310,6 +1324,7 @@ export default function AdminSelectionsPage() {
             onClick={(e) => e.stopPropagation()}
           >
             <option value="all">All</option>
+            <option value="blank">Blank</option>
             {filterOptions.results.map((result) => (
               <option key={result} value={result}>
                 {result}

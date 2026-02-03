@@ -1,7 +1,8 @@
 import { Check } from "lucide-react";
+import { ReactNode } from "react";
 
 interface SystemOverviewProps {
-  description: string;
+  description: ReactNode;
   methodology: string[];
   performanceStats: {
     totalBets: number;
@@ -27,24 +28,26 @@ export function SystemOverview({
               <h2 className="text-2xl sm:text-3xl font-bold text-dark-navy mb-4">
                 System Overview
               </h2>
-              <p className="text-gray-700 leading-relaxed mb-6">
+              <div className="text-gray-700 leading-relaxed mb-6 space-y-4">
                 {description}
-              </p>
-
-              {/* Methodology */}
-              <div>
-                <h3 className="text-xl font-bold text-dark-navy mb-4">
-                  Methodology
-                </h3>
-                <ul className="space-y-3">
-                  {methodology.map((item, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-green flex-shrink-0 mt-0.5" />
-                      <span className="text-gray-700">{item}</span>
-                    </li>
-                  ))}
-                </ul>
               </div>
+
+              {/* Methodology - only show if there are items */}
+              {methodology && methodology.length > 0 && (
+                <div>
+                  <h3 className="text-xl font-bold text-dark-navy mb-4">
+                    Methodology
+                  </h3>
+                  <ul className="space-y-3">
+                    {methodology.map((item, index) => (
+                      <li key={index} className="flex items-start gap-3">
+                        <Check className="w-5 h-5 text-green flex-shrink-0 mt-0.5" />
+                        <span className="text-gray-700">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </div>
 
             {/* Right Side - Performance Stats Box */}

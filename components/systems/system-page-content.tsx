@@ -79,7 +79,7 @@ type ViewMode = "cumulative" | "monthly" | "odds-range";
 
 interface SystemPageContentProps {
   systemSlug: string;
-  description: string;
+  description: React.ReactNode;
   methodology: string[];
 }
 
