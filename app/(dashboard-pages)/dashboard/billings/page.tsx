@@ -37,6 +37,7 @@ import { getFormattedPrice } from "@/lib/promotion-utils";
 
 interface BillingData {
   hasSubscription: boolean;
+  hasUsedYearlyDiscount?: boolean;
   currentPlan: {
     name: string;
     status: string;
@@ -51,6 +52,13 @@ interface BillingData {
     cancelAtPeriodEnd?: boolean;
     cancelAt?: string | null;
     canceledAt?: string | null;
+    pendingChange?: {
+      productId: string;
+      productName: string;
+      systemSlugs: string[];
+      effectiveDate: string | null;
+      description: string;
+    } | null;
   } | null;
   paymentMethod: {
     brand: string;
@@ -100,6 +108,7 @@ export default function BillingsPage() {
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
   const [isCanceling, setIsCanceling] = useState(false);
   const [planChangeDialogOpen, setPlanChangeDialogOpen] = useState(false);
+  const [yearlyDowngradeDialogOpen, setYearlyDowngradeDialogOpen] = useState(false);
   const [systemSelectionDialogOpen, setSystemSelectionDialogOpen] =
     useState(false);
   const [selectedNewPlan, setSelectedNewPlan] = useState<{
@@ -397,6 +406,49 @@ export default function BillingsPage() {
     return false;
   };
 
+  // Determine the change type based on current and new plan
+  const determineChangeType = (
+    currentProductId: string | undefined,
+    newProductId: string
+  ): string | null => {
+    if (!currentProductId) return null;
+
+    const singleSystemProductIds = getSingleSystemProductIds();
+    const isCurrentSingleSystem = singleSystemProductIds.includes(currentProductId);
+    const isCurrentAllSystemsMonthly = currentProductId === PRODUCT_IDS.ALL_SYSTEMS_MONTHLY;
+    const isCurrentAllSystemsYearly = currentProductId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY;
+    const isNewSingleSystem = singleSystemProductIds.includes(newProductId);
+    const isNewAllSystemsMonthly = newProductId === PRODUCT_IDS.ALL_SYSTEMS_MONTHLY;
+    const isNewAllSystemsYearly = newProductId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY;
+
+    // Downgrade from All Systems Yearly to Single System Monthly
+    if (isNewSingleSystem && isCurrentAllSystemsYearly) {
+      return "downgradeFromAllSystemsYearly";
+    }
+
+    // Downgrade from All Systems Yearly to All Systems Monthly
+    if (isNewAllSystemsMonthly && isCurrentAllSystemsYearly) {
+      return "downgradeFromAllSystemsYearly";
+    }
+
+    // Downgrade to Single System (from monthly plans only)
+    if (isNewSingleSystem) {
+      return "downgradeToMonthlySingleSystem";
+    }
+
+    // Upgrade to All Systems Monthly (from Single System)
+    if (isNewAllSystemsMonthly && isCurrentSingleSystem) {
+      return "upgradeToAllSystemsMonthly";
+    }
+
+    // Upgrade to All Systems Yearly (from any plan)
+    if (isNewAllSystemsYearly) {
+      return "upgradeToAllSystemsYearly";
+    }
+
+    return null;
+  };
+
   // Get button text for a plan based on current subscription
   const getPlanButtonText = (plan: (typeof planDefinitions)[0]) => {
     // If user has no subscription, all buttons should say "Choose Plan"
@@ -473,6 +525,22 @@ export default function BillingsPage() {
       return;
     }
 
+    // Check if user is on yearly subscription and trying to downgrade
+    const currentProductId = billingData.currentPlan.productId;
+    const isCurrentYearly = currentProductId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY;
+    
+    // Determine if this is a downgrade
+    // Single system plans use requiresSystemSelection flag, not productId
+    const isNewSingleSystem = plan.requiresSystemSelection === true;
+    const isNewAllSystemsMonthly = plan.productId === PRODUCT_IDS.ALL_SYSTEMS_MONTHLY;
+    const isDowngrading = isCurrentYearly && (isNewSingleSystem || isNewAllSystemsMonthly);
+    
+    if (isCurrentYearly && isDowngrading) {
+      // Block yearly downgrades - show dialog instead
+      setYearlyDowngradeDialogOpen(true);
+      return;
+    }
+
     // User has subscription - handle upgrade/downgrade
     // If downgrading to single system, show system selection first
     if (plan.requiresSystemSelection) {
@@ -532,6 +600,16 @@ export default function BillingsPage() {
 
     setIsCanceling(true);
     try {
+      // Determine the change type
+      const changeType = determineChangeType(
+        billingData.currentPlan?.productId,
+        selectedNewPlan.productId
+      );
+
+      if (!changeType) {
+        throw new Error("Unable to determine subscription change type");
+      }
+
       const response = await fetch(`${apiUrl}/api/users/change-subscription`, {
         method: "POST",
         headers: {
@@ -540,6 +618,7 @@ export default function BillingsPage() {
         },
         credentials: "include",
         body: JSON.stringify({
+          changeType,
           stripeSubscriptionId: billingData.currentPlan.stripeSubscriptionId,
           newProductId: selectedNewPlan.productId,
           systemSlugs: selectedNewPlan.systemSlugs || [],
@@ -554,21 +633,49 @@ export default function BillingsPage() {
         );
       }
 
+      const data = await response.json();
+
+      // If checkout URL is returned, redirect to Stripe checkout
+      if (data.url && data.requiresCheckout) {
+        setPlanChangeDialogOpen(false);
+        setSelectedNewPlan(null);
+        // Redirect to Stripe checkout
+        window.location.href = data.url;
+        return;
+      }
+
       const isUpgradeChange = isUpgrade(
         planDefinitions.find(
           (p) => p.productId === selectedNewPlan.productId
         ) || planDefinitions[0]
       );
 
-      toast.success(
-        isUpgradeChange
-          ? "Subscription upgraded successfully!"
-          : "Subscription change scheduled successfully!"
-      );
+      // Show appropriate message based on response
+      if (data.isChangingInterval) {
+        const effectiveDate = data.effectiveDate
+          ? new Date(data.effectiveDate).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })
+          : "end of your current billing period";
+        toast.success(
+          `Subscription change scheduled. Your new plan will take effect on ${effectiveDate}.`,
+          { duration: 5000 }
+        );
+      } else {
+        toast.success(
+          isUpgradeChange
+            ? "Subscription upgraded successfully!"
+            : "Subscription change scheduled successfully!"
+        );
+      }
       setPlanChangeDialogOpen(false);
       setSelectedNewPlan(null);
-      // Revalidate the billing data to show updated status
-      mutate();
+      
+      // Force immediate refetch of billing data to update UI
+      // Using revalidate: true ensures we get fresh data from server
+      mutate(undefined, { revalidate: true });
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Failed to change subscription"
@@ -656,6 +763,22 @@ export default function BillingsPage() {
                         .
                       </strong>{" "}
                       You&apos;ll continue to have access until then.
+                    </p>
+                  </div>
+                )}
+                {currentPlan.pendingChange && !currentPlan.cancelAtPeriodEnd && (
+                  <div className="mb-3 p-3 bg-amber-50 border border-amber-200 rounded-lg inline-block">
+                    <p className="text-sm text-amber-800">
+                      <strong>
+                        Subscription will change to {currentPlan.pendingChange.productName} on{" "}
+                        {currentPlan.pendingChange.effectiveDate
+                          ? formatDate(currentPlan.pendingChange.effectiveDate)
+                          : currentPlan.nextBillingDate
+                          ? formatDate(currentPlan.nextBillingDate)
+                          : "end of billing period"}
+                        .
+                      </strong>{" "}
+                      You&apos;ll continue to have access to {currentPlan.description.toLowerCase()} until then.
                     </p>
                   </div>
                 )}
@@ -815,7 +938,8 @@ export default function BillingsPage() {
                     const priceInfo = getFormattedPrice(
                       plan.productId,
                       numericPrice,
-                      plan.period
+                      plan.period,
+                      billingData?.hasUsedYearlyDiscount
                     );
 
                     return (
@@ -1104,9 +1228,9 @@ export default function BillingsPage() {
                   (p) => p.productId === selectedNewPlan.productId
                 ) || planDefinitions[0]
               )
-                ? "Your subscription will be upgraded immediately. You'll be charged a prorated amount for the difference."
+                ? "Your subscription will be upgraded immediately. You will be charged to the same payment method as your current subscription. This will start a new billing cycle."
                 : "Your subscription change will take effect at the start of your next billing cycle."}
-            </DialogDescription>
+            </DialogDescription> 
           </DialogHeader>
           {selectedNewPlan && currentPlan && (
             <div className="py-4 space-y-4">
@@ -1155,6 +1279,55 @@ export default function BillingsPage() {
                   )
                 ? "Confirm Upgrade"
                 : "Confirm Change"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Yearly Downgrade Blocked Dialog */}
+      <Dialog
+        open={yearlyDowngradeDialogOpen}
+        onOpenChange={setYearlyDowngradeDialogOpen}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-dark-navy">
+              Cannot Downgrade Yearly Subscription
+            </DialogTitle>
+            <DialogDescription className="text-dark-navy/70">
+              You cannot downgrade a yearly subscription to a monthly subscription.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-dark-navy/70 mb-4">
+              If you would like to switch to a monthly plan, please cancel your current yearly subscription. 
+              You will continue to have access until the end of your billing cycle, and then you can 
+              subscribe to a monthly plan.
+            </p>
+            {billingData?.currentPlan?.nextBillingDate && (
+              <p className="text-sm font-semibold text-dark-navy">
+                Your current subscription ends on{" "}
+                {formatDate(billingData.currentPlan.nextBillingDate)}.
+              </p>
+            )}
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setYearlyDowngradeDialogOpen(false)}
+              className="w-full sm:w-auto"
+            >
+              Close
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                setYearlyDowngradeDialogOpen(false);
+                setCancelDialogOpen(true);
+              }}
+              className="w-full sm:w-auto"
+            >
+              Cancel Subscription
             </Button>
           </DialogFooter>
         </DialogContent>

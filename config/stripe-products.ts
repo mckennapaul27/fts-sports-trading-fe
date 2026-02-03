@@ -9,11 +9,12 @@ const isProduction = process.env.NODE_ENV === "production";
 
 // Test Mode Product IDs (Development)
 const TEST_PRODUCT_IDS = {
-  ALL_SYSTEMS_YEARLY: "prod_TZZdcgHBZ13uZ9",
-  ALL_SYSTEMS_MONTHLY: "prod_TZZcEMlv2cNNWl",
-  SINGLE_SYSTEM_1: "prod_TZZbjLqthXdjxx",
-  SINGLE_SYSTEM_2: "prod_TZZcUfjAmtJfkg",
-  SINGLE_SYSTEM_3: "prod_TZZcuPVww3QyDm",
+  ALL_SYSTEMS_YEARLY: "prod_TuX5CZShsGjSV3",
+  ALL_SYSTEMS_MONTHLY: "prod_TuWZ5QV2ICNGoZ",
+  SINGLE_SYSTEM_1: "prod_TuWY39xLvpurco",
+  SINGLE_SYSTEM_2: "prod_TuWYybtPZAmjk9",
+  SINGLE_SYSTEM_3: "prod_TuWYZoWwjZiM5t",
+  SINGLE_SYSTEM_4: "prod_TuWY4ULAcIrsHl",
 };
 
 // Production Product IDs
@@ -45,6 +46,7 @@ export const getSingleSystemProductIds = (): string[] => {
       TEST_PRODUCT_IDS.SINGLE_SYSTEM_1,
       TEST_PRODUCT_IDS.SINGLE_SYSTEM_2,
       TEST_PRODUCT_IDS.SINGLE_SYSTEM_3,
+      TEST_PRODUCT_IDS.SINGLE_SYSTEM_4,
     ];
   }
 };
@@ -63,6 +65,7 @@ export const getProductIdToSystemName = (): Record<string, string> => {
       [TEST_PRODUCT_IDS.SINGLE_SYSTEM_1]: "System 1",
       [TEST_PRODUCT_IDS.SINGLE_SYSTEM_2]: "System 2",
       [TEST_PRODUCT_IDS.SINGLE_SYSTEM_3]: "System 3",
+      [TEST_PRODUCT_IDS.SINGLE_SYSTEM_4]: "System 4",
     };
   }
 };
@@ -82,12 +85,12 @@ export const isAllSystemsProduct = (productId: string): boolean => {
 
 // Helper function to get all system slugs as a comma-separated string
 export const getAllSystemSlugsString = (): string => {
-  const count = isProduction ? 4 : 3;
+  const count = 4; // Both dev and prod now have 4 systems
   return Array.from({ length: count }, (_, i) => `system-${i + 1}`).join(",");
 };
 
 // Helper function to get all system slugs as an array
 export const getAllSystemSlugsArray = (): string[] => {
-  const count = isProduction ? 4 : 3;
+  const count = 4; // Both dev and prod now have 4 systems
   return Array.from({ length: count }, (_, i) => `system-${i + 1}`);
 };

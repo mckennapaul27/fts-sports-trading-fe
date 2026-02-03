@@ -4,7 +4,7 @@ import { PRODUCT_IDS } from "./stripe-products";
  * Promotional periods configuration
  *
  * Test Mode:
- * - Coupon ID: 3PTHivK6 (sandbox/test mode)
+ * - Coupon ID: GGKvMYbk (sandbox/test mode)
  *
  * Production:
  * - Coupon ID: Set via STRIPE_PROMOTION_COUPON_ID env var
@@ -24,7 +24,7 @@ if (typeof window === "undefined" || process.env.NODE_ENV !== "production") {
 
 // Test Mode Coupon IDs (Sandbox)
 const TEST_COUPON_IDS = {
-  ALL_SYSTEMS_YEARLY_50_OFF: "3PTHivK6", // Dev/test coupon ID
+  ALL_SYSTEMS_YEARLY_50_OFF: "16GlRQW9", // Dev/test coupon ID
 };
 
 // Production Coupon IDs (Live - set via environment variable)
@@ -155,11 +155,21 @@ export function getBestActivePromotionForProduct(
 
 /**
  * Get promotional price for a product, or return original price
+ * @param hasUsedYearlyDiscount - If true, user has already used the yearly discount and should not see it again
  */
 export function getPromotionalPrice(
   productId: string,
-  originalPrice: number
+  originalPrice: number,
+  hasUsedYearlyDiscount?: boolean
 ): { price: number; isPromotional: boolean; promotion?: Promotion } {
+  // If user has already used the yearly discount, don't show it for yearly products
+  if (hasUsedYearlyDiscount && productId === PRODUCT_IDS.ALL_SYSTEMS_YEARLY) {
+    return {
+      price: originalPrice,
+      isPromotional: false,
+    };
+  }
+
   const promotion = getBestActivePromotionForProduct(productId);
 
   // Diagnostic logging

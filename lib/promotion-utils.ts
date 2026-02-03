@@ -8,11 +8,13 @@ import {
 
 /**
  * Get formatted price string with promotional information
+ * @param hasUsedYearlyDiscount - If true, user has already used the yearly discount and should not see it again
  */
 export function getFormattedPrice(
   productId: string | undefined,
   originalPrice: number,
-  period: string
+  period: string,
+  hasUsedYearlyDiscount?: boolean
 ): {
   displayPrice: string;
   originalPrice: string;
@@ -43,7 +45,7 @@ export function getFormattedPrice(
     };
   }
 
-  const priceInfo = getPromotionalPrice(productId, originalPrice);
+  const priceInfo = getPromotionalPrice(productId, originalPrice, hasUsedYearlyDiscount);
 
   if (priceInfo.isPromotional && priceInfo.promotion) {
     const result = {
